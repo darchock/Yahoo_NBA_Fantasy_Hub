@@ -150,6 +150,9 @@ token_cache.json
 # Ignore configuration file for Yahoo Developer API
 config.py
 
+# Ignore responses .json files as responses from API calls
+response/*.json
+
 # Spyder project settings
 .spyderproject
 .spyproject

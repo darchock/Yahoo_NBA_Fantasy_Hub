@@ -114,7 +114,7 @@ def get_league_standings() -> None:
             standings = response.json()
 
             # Save to file
-            with open("response.json", "w", encoding="utf-8") as f:
+            with open("response/standings.json", "w", encoding="utf-8") as f:
                 json.dump(standings, f, indent=2, ensure_ascii=False)
 
             print("✅ JSON response saved successfully to response.json")
