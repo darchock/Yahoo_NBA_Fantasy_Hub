@@ -144,6 +144,12 @@ ENV/
 env.bak/
 venv.bak/
 
+# Ignore token cache which contains OAuth tokens
+token_cache.json
+
+# Ignore configuration file for Yahoo Developer API
+config.py
+
 # Spyder project settings
 .spyderproject
 .spyproject
