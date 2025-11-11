@@ -4,8 +4,9 @@ Handles OAuth authentication and token management.
 """
 
 import sys
+import json
 from yahoo_api_handler import YahooAPIHandler
-
+from config import LEAGUE_KEY
 
 def authenticate_if_needed() -> bool:
     """
@@ -101,7 +102,29 @@ def main() -> None:
 
     # TODO: Add your application logic here
     print("Ready to make API requests to Yahoo Fantasy API")
+    get_league_standings()
+
+def get_league_standings() -> None:
+    """Fetch and display league standings from Yahoo Fantasy API."""
+    try:
+        print("Fetching league standings...")
+        response = YahooAPIHandler.make_request(f"/league/{LEAGUE_KEY}/standings", method="GET", params={"format": "json"})
+        # Check if request was successful
+        if response.status_code == 200:
+            standings = response.json()
+
+            # Save to file
+            with open("response.json", "w", encoding="utf-8") as f:
+                json.dump(standings, f, indent=2, ensure_ascii=False)
+
+            print("✅ JSON response saved successfully to response.json")
+        else:
+            print(f"Failed to fetch standings. Status code: {response.status_code}")
+            print(response.text)
+    except Exception as e:
+        print(f"Failed to fetch league standings: {e}")
 
 
 if __name__ == "__main__":
+    print(f"League specs: {LEAGUE_KEY}")
     main()
