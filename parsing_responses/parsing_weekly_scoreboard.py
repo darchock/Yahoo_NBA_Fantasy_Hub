@@ -1,7 +1,8 @@
 from typing import Any, Dict, List
-from consts import *
+from parsing_responses.consts import *
 
-def parse_weekly_scoreboard(data: Dict[str, Any]) -> List[Dict[str, Any]]:
+def parse_weekly_scoreboard(data: Dict[str, Any], week:str) -> List[Dict[str, Any]]:
+    print(f"parsing scoreboard json for week {week}")
     # 1️⃣ Extract matchups safely
     matchups = safe_get(
         data,
