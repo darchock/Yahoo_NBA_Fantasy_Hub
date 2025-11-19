@@ -1,4 +1,4 @@
-
+# from typing import Any, Dict, List
 
 # Stat ID → readable name
 STAT_ID_TO_NAME_MAP = {
@@ -29,36 +29,6 @@ MANAGER_ID_TO_NAME_MAP = {
     "10": "ג'יי ג'יי רדי"
 }
 
-# # `safe_get` helper function for parsing Yahoo's inconsistent response structures
-# # returns the nested value if exists
-# # if doesn't exist OR index out of range OR type mismatch it returns `default`
-# def safe_get(d, *keys, default=None):
-#     """Safely get nested values from Yahoo's wildly inconsistent structures."""
-#     for key in keys:
-#         if d is None:
-#             return default
-
-#         # Case 1: dict with string key
-#         if isinstance(d, dict) and key in d:
-#             d = d[key]
-#             continue
-
-#         # Case 2: dict pretending to be a list ("0", "1", ...)
-#         if isinstance(d, dict) and isinstance(key, int):
-#             str_key = str(key)
-#             if str_key in d:
-#                 d = d[str_key]
-#                 continue
-
-#         # Case 3: normal list index
-#         if isinstance(d, list) and isinstance(key, int) and key < len(d):
-#             d = d[key]
-#             continue
-
-#         # Key not found
-#         return default
-
-#     return d
 
 def safe_get(d, *keys, default=None):
     """
@@ -164,3 +134,37 @@ def extract_from_list_of_dicts(lst, key):
         if isinstance(item, dict) and key in item:
             return item[key]
     return None
+
+# def extract_stats_from_response(stats_structure: list[Any]) -> List[Dict[str, Any]]:
+#     return []
+
+# # `safe_get` helper function for parsing Yahoo's inconsistent response structures
+# # returns the nested value if exists
+# # if doesn't exist OR index out of range OR type mismatch it returns `default`
+# def safe_get(d, *keys, default=None):
+#     """Safely get nested values from Yahoo's wildly inconsistent structures."""
+#     for key in keys:
+#         if d is None:
+#             return default
+
+#         # Case 1: dict with string key
+#         if isinstance(d, dict) and key in d:
+#             d = d[key]
+#             continue
+
+#         # Case 2: dict pretending to be a list ("0", "1", ...)
+#         if isinstance(d, dict) and isinstance(key, int):
+#             str_key = str(key)
+#             if str_key in d:
+#                 d = d[str_key]
+#                 continue
+
+#         # Case 3: normal list index
+#         if isinstance(d, list) and isinstance(key, int) and key < len(d):
+#             d = d[key]
+#             continue
+
+#         # Key not found
+#         return default
+
+#     return d
