@@ -7,6 +7,11 @@ import sys
 import json
 from yahoo_api_handler import YahooAPIHandler
 from config import LEAGUE_KEY
+from parsing_responses.parsing_weekly_scoreboard import parse_weekly_scoreboard
+from parsing_responses.parsing_weekly_standings import parse_weekly_standings
+from parsing_responses.consts import *
+from .requests.get_standings import get_league_standings
+from .requests.get_scoreboard import get_league_weekly_scoreboard
 
 def authenticate_if_needed() -> bool:
     """
@@ -31,7 +36,6 @@ def authenticate_if_needed() -> bool:
     print("   python main.py --auth <authorization_code>")
     return False
 
-
 def handle_auth(auth_code: str) -> None:
     """
     Exchange authorization code for access token.
@@ -47,7 +51,6 @@ def handle_auth(auth_code: str) -> None:
     except Exception as e:
         print(f"✗ Authentication failed: {e}")
         sys.exit(1)
-
 
 def main() -> None:
     """Main application entry point."""
@@ -100,77 +103,26 @@ def main() -> None:
     print("Application running...")
     print("=" * 50)
 
-    # TODO: Add your application logic here
+    # TODO: Add await for user input logic 
     print("Ready to make API requests to Yahoo Fantasy API")
-    get_league_standings()
+    week_num = "4"
+    get_league_standings(week=week_num)
+    get_league_weekly_scoreboard(week=week_num)
 
-def get_league_standings() -> None:
-    """Fetch and display league standings from Yahoo Fantasy API."""
-    try:
-        print("Fetching league standings...")
-        response = YahooAPIHandler.make_request(f"/league/{LEAGUE_KEY}/standings", method="GET", params={"format": "json"})
-        # Check if request was successful
-        if response.status_code == 200:
-            standings = response.json()
+    response_scoreboard_weekly = json.load(open(f"response/scoreboard_week_{week_num}.json", "r", encoding="utf-8")) 
+    parsed_scoreboard_weekly = parse_weekly_scoreboard(data=response_scoreboard_weekly, week=week_num)
 
-            # Save to file
-            with open("response/standings.json", "w", encoding="utf-8") as f:
-                json.dump(standings, f, indent=2, ensure_ascii=False)
+    # Save to file
+    path = f"league_data/weekly_scoreboard/parsed_scoreboard_week_{week_num}.json"
+    save_parsed_response_to_file(parsed_scoreboard_weekly, path)
 
-            print("✅ JSON response saved successfully to response.json")
-        else:
-            print(f"Failed to fetch standings. Status code: {response.status_code}")
-            print(response.text)
-    except Exception as e:
-        print(f"Failed to fetch league standings: {e}")
+    response_standings_weekly = json.load(open(f"response/standings_{week_num}.json", "r", encoding="utf-8"))
+    parsed_standings_weekly = parse_weekly_standings(data=response_standings_weekly, week=week_num)
 
-def get_league_scoreboard() -> None:
-    """Fetch and display league scoreboard from Yahoo Fantasy API."""
-    try:
-        print("Fetching league scoreboard...")
-        response = YahooAPIHandler.make_request(
-            f"/league/{LEAGUE_KEY}/scoreboard",
-            method="GET", 
-            params={"format": "json"}
-        )
-        # Check if request was successful
-        if response.status_code == 200:
-            scoreboard = response.json()
+    # Save to file
+    path = f"league_data/weekly_scoreboard/parsed_standings_week_{week_num}.json"
+    save_parsed_response_to_file(parsed_standings_weekly, path)
 
-            # Save to file
-            with open("response/scoreboard.json", "w", encoding="utf-8") as f:
-                json.dump(scoreboard, f, indent=2, ensure_ascii=False)
-
-            print("✅ JSON response saved successfully to scoreboard.json")
-        else:
-            print(f"Failed to fetch scoreboard. Status code: {response.status_code}")
-            print(response.text)
-    except Exception as e:
-        print(f"Failed to fetch league scoreboard: {e}")    
-
-def get_league_weekly_scoreboard(week: str) -> None:
-    """Fetch and display league weekly scoreboard from Yahoo Fantasy API."""
-    try:
-        print(f"Fetching league scoreboard for week {week}...")
-        response = YahooAPIHandler.make_request(
-            f"/league/{LEAGUE_KEY}/scoreboard;week={week}",
-            method="GET",
-            params={"format": "json"}
-        )
-        # Check if request was successful
-        if response.status_code == 200:
-            scoreboard = response.json()
-
-            # Save to file
-            with open(f"response/scoreboard_week_{week}.json", "w", encoding="utf-8") as f:
-                json.dump(scoreboard, f, indent=2, ensure_ascii=False)
-
-            print(f"✅ JSON response saved successfully to scoreboard_week_{week}.json")
-        else:
-            print(f"Failed to fetch scoreboard for week {week}. Status code: {response.status_code}")
-            print(response.text)
-    except Exception as e:
-        print(f"Failed to fetch league scoreboard for week {week}: {e}")
 
 if __name__ == "__main__":
     print(f"League specs: {LEAGUE_KEY}")
