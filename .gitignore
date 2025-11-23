@@ -157,6 +157,9 @@ response/*.json
 league_data/weekly_scoreboard/*.json
 league_data/weekly_standings_and_totals/*.json
 
+# Ignore generated visualization files
+visualization/graphs/*/*.png
+
 # Spyder project settings
 .spyderproject
 .spyproject
