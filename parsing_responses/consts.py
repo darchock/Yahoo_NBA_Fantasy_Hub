@@ -1,4 +1,6 @@
-# from typing import Any, Dict, List
+from typing import Any, Dict, List
+import json
+import os
 
 # Stat ID → readable name
 STAT_ID_TO_NAME_MAP = {
@@ -134,6 +136,34 @@ def extract_from_list_of_dicts(lst, key):
         if isinstance(item, dict) and key in item:
             return item[key]
     return None
+
+def save_parsed_response_to_file(response: List[Dict[str, Any]], path: str) -> None:
+    """Save parsed response to a JSON file"""
+    
+    file_name, file_extension = os.path.splitext(path)
+    if file_extension.lower() != ".json":
+        path = f"{file_name}.json"
+
+    try:
+        with open(path, "w", encoding="utf-8") as file:
+            json.dump(response, file, indent=2, ensure_ascii=False)
+        print(f"Parsed response saved to {path}")
+    except Exception as e:
+        print(f"Failed to save parsed response to {path}: {e}")
+
+def save_response_to_file(response: Dict[str, Any], path: str) -> None:
+    """Save parsed response to a JSON file"""
+    
+    file_name, file_extension = os.path.splitext(path)
+    if file_extension.lower() != ".json":
+        path = f"{file_name}.json"
+        
+    try:
+        with open(path, "w", encoding="utf-8") as file:
+            json.dump(response, file, indent=2, ensure_ascii=False)
+        print(f"Parsed response saved to {path}")
+    except Exception as e:
+        print(f"Failed to save parsed response to {path}: {e}")
 
 # def extract_stats_from_response(stats_structure: list[Any]) -> List[Dict[str, Any]]:
 #     return []
