@@ -153,6 +153,10 @@ config.py
 # Ignore responses .json files as responses from API calls
 response/*.json
 
+# Ignore parsed data output files
+league_data/weekly_scoreboard/*.json
+league_data/weekly_standings_and_totals/*.json
+
 # Spyder project settings
 .spyderproject
 .spyproject
