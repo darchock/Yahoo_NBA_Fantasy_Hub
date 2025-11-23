@@ -10,8 +10,10 @@ from config import LEAGUE_KEY
 from parsing_responses.parsing_weekly_scoreboard import parse_weekly_scoreboard
 from parsing_responses.parsing_weekly_standings import parse_weekly_standings
 from parsing_responses.consts import *
-from .requests.get_standings import get_league_standings
-from .requests.get_scoreboard import get_league_weekly_scoreboard
+from api.get_standings import get_league_standings
+from api.get_scoreboard import get_league_weekly_scoreboard
+from visualization.totals_table import run_totals_table_visualization
+from visualization.ranking_table import run_ranking_table_visualization
 
 def authenticate_if_needed() -> bool:
     """
@@ -36,6 +38,7 @@ def authenticate_if_needed() -> bool:
     print("   python main.py --auth <authorization_code>")
     return False
 
+
 def handle_auth(auth_code: str) -> None:
     """
     Exchange authorization code for access token.
@@ -51,6 +54,7 @@ def handle_auth(auth_code: str) -> None:
     except Exception as e:
         print(f"✗ Authentication failed: {e}")
         sys.exit(1)
+
 
 def main() -> None:
     """Main application entry point."""
@@ -122,6 +126,14 @@ def main() -> None:
     # Save to file
     path = f"league_data/weekly_scoreboard/parsed_standings_week_{week_num}.json"
     save_parsed_response_to_file(parsed_standings_weekly, path)
+
+    # Run visualization generation
+
+    # Run Totals Table generation
+    run_totals_table_visualization(week=week_num)
+
+    # Run Ranking Table generation
+    run_ranking_table_visualization(week=week_num)
 
 
 if __name__ == "__main__":
