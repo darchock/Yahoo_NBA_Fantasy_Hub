@@ -1,37 +1,40 @@
 from typing import Any, Dict, List
 from parsing_responses.consts import *
 
-def parse_weekly_scoreboard(data: Dict[str, Any], week:str) -> List[Dict[str, Any]]:
-    print(f"parsing scoreboard json for week {week}")
+def parse_weekly_standings(data: Dict[str, Any], week: str) -> List[Dict[str, Any]]:
+    print(f"Parsing week {week} standings")
     result = []
     try:
         # 1️⃣ Extract matchups safely
-        matchups = safe_get(
+        standings_structure = safe_get(
             data,
-            "fantasy_content", "league", "scoreboard", "matchups"
+            "fantasy_content", "league", "standings"
         )
 
+        if not standings_structure is None:
+            standings = safe_get(
+                standings_structure[0],
+                "teams"
+            )
 
-        if isinstance(matchups, dict):
-            
-            # 2️⃣ Iterate through all matchups → teams
-            for matchup in matchups.values():
-                teams = safe_get(matchup, "teams", default={})
+            if isinstance(standings, dict):
 
-                if isinstance(teams, dict):
-                    
-                    # 3️⃣ Iterate through the two teams competing in the matchup
-                    for team in teams.values():
-                        if not isinstance(team, dict):
-                            continue
+                # 2️⃣ Iterate through all teams standings dict structure
+                for standing, team in standings.items():
+                    if not isinstance(team, dict):
+                        continue
 
-                        team_lst = team["team"]
-                        team_info = team_lst[0]
+                    team_lst = team["team"]
+                    team_info = team_lst[0]
 
-                        team_id = extract_from_list_of_dicts(team_info, "team_id")
-                        team_stats_dict = team_lst[1]
+                    team_id = extract_from_list_of_dicts(
+                        team_info,
+                        "team_id"
+                    )
 
-                        if isinstance(team_stats_dict, dict):
+                    team_stats_dict = team_lst[1]
+
+                    if isinstance(team_stats_dict, dict):
 
                             stats_map = {}
                             stats_lst = team_stats_dict["team_stats"]["stats"]
@@ -55,10 +58,11 @@ def parse_weekly_scoreboard(data: Dict[str, Any], week:str) -> List[Dict[str, An
                             team_name = MANAGER_ID_TO_NAME_MAP.get(str(team_id))
                             result.append({
                                 "team_name": team_name,
+                                "standing": int(standing)+1,
                                 "stats": stats_map
                             })
     except Exception as e:
-        print(f"Error parsing scoreboard for week {week}: {e}")
+        print(f"Error parsing weekly standings for week {week}: {e}")
 
-    print(f"✅ Successfully completed parsing week {week} scoreboard")
+    print(f"✅ Successfully completed parsing week {week} standings")
     return result
