@@ -11,11 +11,18 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from matplotlib import pyplot as plt
-from visualization._helpers import (
-    format_text_with_direction,
-    get_cell_color,
-    load_scoreboard_json,
-)
+try:
+    from visualization._helpers import (
+        format_text_with_direction,
+        load_scoreboard_json,
+        get_cell_color,
+    )
+except ImportError:
+    from _helpers import (
+        format_text_with_direction,
+        load_scoreboard_json,
+        get_cell_color,
+    )
 
 
 
@@ -104,6 +111,7 @@ def save_ranking_table_image(ranks_df, numeric_cols, output_path="Ranking_Table.
     plt.close()
 
     return str(Path(output_path).absolute())
+
 
 def run_ranking_table_visualization(week: str) -> None:
     """Run ranking table visualization for given week number."""

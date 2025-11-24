@@ -8,12 +8,21 @@ Saves image to `visualization/graphs/week_{week}/Totals_Table_Week_{week}.png`.
 """
 
 from pathlib import Path
+import pandas as pd
+from typing import Any, Dict
 from matplotlib import pyplot as plt
-from visualization._helpers import (
-    format_text_with_direction,
-    load_scoreboard_json,
-    get_cell_color,
-)
+try:
+    from visualization._helpers import (
+        format_text_with_direction,
+        load_scoreboard_json,
+        get_cell_color,
+    )
+except ImportError:
+    from _helpers import (
+        format_text_with_direction,
+        load_scoreboard_json,
+        get_cell_color,
+    )
 
 
 def save_table_as_image(df, output_path="totals_table.png", week=None):
