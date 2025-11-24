@@ -10,6 +10,7 @@ Saves image to `visualization/graphs/week_{week}/Totals_Table_Week_{week}.png`.
 from pathlib import Path
 import pandas as pd
 from typing import Any, Dict
+import seaborn as sns
 from matplotlib import pyplot as plt
 try:
     from visualization._helpers import (
@@ -27,8 +28,16 @@ except ImportError:
 
 def save_table_as_image(df, output_path="totals_table.png", week=None):
     """Convert DataFrame to styled image table and save."""
+
+    sns.set_theme(style="whitegrid")
+    sns.set_context("notebook", font_scale=1)
+    avg_bg = sns.color_palette("coolwarm")[2]
     
+    # Convert RGB tuples to hex strings
+    avg_bg = f'#{int(avg_bg[0]*255):02x}{int(avg_bg[1]*255):02x}{int(avg_bg[2]*255):02x}'
+
     fig, ax = plt.subplots(figsize=(18, 10))
+    fig.patch.set_facecolor("white")
     ax.axis("tight")
     ax.axis("off")
     
@@ -53,7 +62,7 @@ def save_table_as_image(df, output_path="totals_table.png", week=None):
                 row_data.append(str(value))
             
             if idx == len(df) - 1:
-                row_colors.append("#e8e8e8")
+                row_colors.append(avg_bg)
             else:
                 col_vals = df[col].iloc[:-1]
                 lower = col in lower_is_better
@@ -65,7 +74,7 @@ def save_table_as_image(df, output_path="totals_table.png", week=None):
     
     table = ax.table(cellText=table_data, cellLoc="center", loc="center", cellColours=cell_colors)
     table.auto_set_font_size(False)
-    table.set_fontsize(8)
+    table.set_fontsize(9)
     table.scale(1.2, 2.5)  # Increase cell width and height to fit text better
     
     # Fit text to cells
@@ -73,8 +82,12 @@ def save_table_as_image(df, output_path="totals_table.png", week=None):
         for j in range(len(header)):
             cell = table[(i, j)]
             cell.set_text_props(ha="center", va="center")
+            # Slightly bolder header/summary row
             if i == 0 or i == len(table_data) - 1:
                 cell.set_text_props(weight="bold")
+            # Add subtle borders for readability
+            cell.set_edgecolor("#dddddd")
+            cell.set_linewidth(0.5)
     
     league_avg_idx = len(table_data) - 1
     for i in range(len(header)):
@@ -84,8 +97,8 @@ def save_table_as_image(df, output_path="totals_table.png", week=None):
     if week is not None:
         title = f"Totals Table week #{week}"
     else:
-        title = "Team Totals - Color Coded (Green = Best, Red = Worst)"
-    plt.title(title, fontsize=14, pad=20)
+        title = "Team Totals Weekly"
+    plt.title(title, fontsize=20, pad=20)
     
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
@@ -121,6 +134,7 @@ def run_totals_table_visualization(week: str) -> None:
         output_dir = Path(f"visualization/graphs/week_{week}")
         output_path = output_dir / f"Totals_Table_Week_{week}.png"
         
+        df = append_league_average_row(df)
         output_abs_path = save_table_as_image(df, str(output_path), week=week)
         print(f"✓ Saved to: {output_abs_path}")
     else:
@@ -128,7 +142,7 @@ def run_totals_table_visualization(week: str) -> None:
 
 
 if __name__ == "__main__":
-    json_file = Path("league_data/weekly_scoreboard/parsed_scoreboard_week_4.json")
+    json_file = Path("league_data/weekly_scoreboard/parsed_scoreboard_week_5.json")
     
     if json_file.exists():
         print(f"Loading {json_file}...")
@@ -136,7 +150,7 @@ if __name__ == "__main__":
         print(f"Loaded {len(df)} teams/rows")
         
         # Extract week number from filename
-        week = json_file.stem.split("_")[-1]  # e.g., "parsed_scoreboard_week_4" -> "4"
+        week = json_file.stem.split("_")[-1]
         output_dir = Path(f"visualization/graphs/week_{week}")
         output_path = output_dir / f"Totals_Table_Week_{week}.png"
         

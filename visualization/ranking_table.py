@@ -10,6 +10,7 @@ Saves image to `visualization/graphs/week_{week}/Ranking_Table_Week_{week}.png`.
 import pandas as pd
 import numpy as np
 from pathlib import Path
+import seaborn as sns
 from matplotlib import pyplot as plt
 try:
     from visualization._helpers import (
@@ -47,8 +48,13 @@ def build_ranking_df(df):
 
 
 def save_ranking_table_image(ranks_df, numeric_cols, output_path="Ranking_Table.png", week=None):
+    """Convert ranking DataFrame to styled image table and save."""
+
+    sns.set_theme(style="whitegrid")
+    sns.set_context("notebook", font_scale=1)
 
     fig, ax = plt.subplots(figsize=(18, 10))
+    fig.patch.set_facecolor("white")
     ax.axis("tight")
     ax.axis("off")
 
@@ -88,7 +94,7 @@ def save_ranking_table_image(ranks_df, numeric_cols, output_path="Ranking_Table.
 
     table = ax.table(cellText=table_data, cellLoc="center", loc="center", cellColours=cell_colors)
     table.auto_set_font_size(False)
-    table.set_fontsize(8)
+    table.set_fontsize(9)
     table.scale(1.2, 2.5)
 
     # Fit text to cells
@@ -98,13 +104,15 @@ def save_ranking_table_image(ranks_df, numeric_cols, output_path="Ranking_Table.
             cell.set_text_props(ha="center", va="center")
             if i == 0:
                 cell.set_text_props(weight="bold")
+            cell.set_edgecolor("#dddddd")
+            cell.set_linewidth(0.5)
 
     # Title
     if week is not None:
         title = f"Ranking Table week #{week}"
     else:
-        title = "Ranking Table"
-    plt.title(title, fontsize=14, pad=20)
+        title = "Ranking Table Weekly"
+    plt.title(title, fontsize=20, pad=20)
 
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(output_path, dpi=150, bbox_inches="tight")
@@ -134,7 +142,7 @@ def run_ranking_table_visualization(week: str) -> None:
 
 
 if __name__ == "__main__":
-    json_file = Path("league_data/weekly_scoreboard/parsed_scoreboard_week_4.json")
+    json_file = Path("league_data/weekly_scoreboard/parsed_scoreboard_week_5.json")
 
     if json_file.exists():
         print(f"Loading {json_file}...")
