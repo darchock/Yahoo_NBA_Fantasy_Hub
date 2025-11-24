@@ -85,6 +85,21 @@ def save_table_as_image(df, output_path="totals_table.png", week=None):
     return str(Path(output_path).absolute())
 
 
+def append_league_average_row(df) -> pd.DataFrame:
+    """Append a 'League Average' row to the DataFrame."""
+    avg_row: Dict[str, Any] = {"Team": "League Average"}
+    for col in df.columns:
+        if col != "Team":
+            try:
+                avg_value = df[col].mean()
+                avg_row[col] = avg_value
+            except Exception:
+                avg_row[col] = None
+    df.loc[len(df)] = avg_row
+
+    return df
+
+
 def run_totals_table_visualization(week: str) -> None:
     """Run totals table visualization for given week."""
     json_file = Path(f"league_data/weekly_scoreboard/parsed_scoreboard_week_{week}.json")
@@ -116,6 +131,7 @@ if __name__ == "__main__":
         output_dir = Path(f"visualization/graphs/week_{week}")
         output_path = output_dir / f"Totals_Table_Week_{week}.png"
         
+        df = append_league_average_row(df)
         output_abs_path = save_table_as_image(df, str(output_path), week=week)
         print(f"✓ Saved to: {output_abs_path}")
     else:
