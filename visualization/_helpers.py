@@ -9,9 +9,7 @@ Provides:
 
 import json
 import unicodedata
-from pathlib import Path
 import pandas as pd
-import numpy as np
 
 
 def is_rtl_text(text: str) -> bool:
