@@ -202,8 +202,11 @@ if __name__ == "__main__":
         output_dir = Path(f"visualization/graphs/week_{week}")
         styled_file_name = f"styled_ranking_week_{week}.png"
 
-        create_styled_rankings_table(df, week=week, output_dir=output_dir, file_name=styled_file_name)
-        print(f"✓ Saved to: {str(output_dir / styled_file_name)}")
+        try:
+            create_styled_rankings_table(df, week=week, output_dir=output_dir, file_name=styled_file_name)
+            print(f"✓ Saved to: {str(output_dir / styled_file_name)}")
+        except Exception as e:
+            print(f"Error creating styled rankings table: {e}")
 
         # file_name = f"Ranking_Table_Week_{week}.png"
         # output_path = output_dir / file_name
