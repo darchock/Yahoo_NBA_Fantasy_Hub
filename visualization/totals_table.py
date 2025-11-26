@@ -10,6 +10,7 @@ Saves image to `visualization/graphs/week_{week}/Totals_Table_Week_{week}.png`.
 from pathlib import Path
 import pandas as pd
 from typing import Any, Dict
+import dataframe_image as dfi
 import seaborn as sns
 from matplotlib import pyplot as plt
 try:
@@ -122,8 +123,46 @@ def append_league_average_row(df) -> pd.DataFrame:
     return df
 
 
+def create_styled_totals_table(df: pd.DataFrame, week: str, output_dir: Path, file_name: str) -> None:
+    """Create styled totals table and save as image."""
+
+    regular_stats = ['FGM','FGA', 'FTM','FTA','FG%', 'FT%', '3PTM', 'PTS', 'REB', 'AST', 'STL', 'BLK']
+    revert_stats = ['TO']
+    float_stats = ['FG%', 'FT%']
+    integer_stats = ['FGM','FGA', 'FTM','FTA','3PTM', 'PTS', 'REB', 'AST', 'STL', 'BLK', 'TO']
+
+    with_color_indices = [r for r in df.index.tolist() if r != "League Average"]
+    subset_regular_cols = df.loc[with_color_indices, regular_stats].columns.tolist()
+    subset_revert_cols = df.loc[with_color_indices, revert_stats].columns.tolist()
+
+    def highlight_average(x):
+        return ['background-color: #696969; font-weight: bold' if x.name == 'League Average' else '' for _ in x]
+
+    def float_format(x):
+        return f'{x:.3f}'
+
+    def integer_format(x):
+        return f'{x:.0f}'
+
+    # league_avg_subset = (['League Average'], df.columns.tolist())
+    title = f'Totals table - week {week}'
+    totals_styled_df = (
+        df.style
+        .format(float_format, subset=float_stats)
+        .format(integer_format,subset=integer_stats)
+        .background_gradient(cmap='RdYlGn', subset=subset_regular_cols)
+        .background_gradient(cmap='RdYlGn_r', subset=subset_revert_cols)
+        .apply(highlight_average, axis=1)
+        .set_caption(f"<b>{title}</b>")
+        .hide(axis="index")
+    )
+    
+    output_path = str(output_dir / file_name)
+    styled: Any = totals_styled_df
+    dfi.export(styled, output_path)
+
 def run_totals_table_visualization(week: str) -> None:
-    """Run totals table visualization for given week."""
+    """Run totals table visualization for given week - been called from `main.py`"""
     json_file = Path(f"league_data/weekly_scoreboard/parsed_scoreboard_week_{week}.json")
     
     if json_file.exists():
@@ -132,30 +171,45 @@ def run_totals_table_visualization(week: str) -> None:
         print(f"Loaded {len(df)} teams/rows")
         
         output_dir = Path(f"visualization/graphs/week_{week}")
-        output_path = output_dir / f"Totals_Table_Week_{week}.png"
+        styled_file_name = f"styled_totals_week_{week}.png"
         
-        df = append_league_average_row(df)
-        output_abs_path = save_table_as_image(df, str(output_path), week=week)
-        print(f"✓ Saved to: {output_abs_path}")
+        try:
+            df = append_league_average_row(df)
+            create_styled_totals_table(df=df, week=week, output_dir=output_dir, file_name=styled_file_name)
+            print(f"✓ Saved to: {str(output_dir / styled_file_name)}")
+        except Exception as e:
+            print(f"Error creating styled totals table: {e}")
+
+        # file_name = f"Totals_Table_Week_{week}.png"
+        # output_path = output_dir / file_name
+        # output_abs_path = save_table_as_image(df, str(output_path), week=week)
+        # print(f"✓ Saved to: {str(Path(output_dir / file_name).absolute())}")
     else:
         print(f"File not found: {json_file}")
 
 
 if __name__ == "__main__":
-    json_file = Path("league_data/weekly_scoreboard/parsed_scoreboard_week_5.json")
+    week = "5"
+    json_file = Path(f"league_data/weekly_scoreboard/parsed_scoreboard_week_{week}.json")
     
     if json_file.exists():
         print(f"Loading {json_file}...")
         df = load_scoreboard_json(str(json_file))
         print(f"Loaded {len(df)} teams/rows")
         
-        # Extract week number from filename
-        week = json_file.stem.split("_")[-1]
         output_dir = Path(f"visualization/graphs/week_{week}")
-        output_path = output_dir / f"Totals_Table_Week_{week}.png"
+        styled_file_name = f"styled_ranking_week_{week}.png"
         
-        df = append_league_average_row(df)
-        output_abs_path = save_table_as_image(df, str(output_path), week=week)
-        print(f"✓ Saved to: {output_abs_path}")
+        try:
+            df = append_league_average_row(df)
+            create_styled_totals_table(df=df, week=week, output_dir=output_dir, file_name=styled_file_name)
+            print(f"✓ Saved to: {str(output_dir / styled_file_name)}")
+        except Exception as e:
+            print(f"Error creating styled totals table: {e}")
+
+        # file_name = f"Totals_Table_Week_{week}.png"
+        # output_path = output_dir / file_name
+        # output_abs_path = save_table_as_image(df, str(output_path), week=week)
+        # print(f"✓ Saved to: {str(Path(output_dir / file_name).absolute())}")
     else:
         print(f"File not found: {json_file}")

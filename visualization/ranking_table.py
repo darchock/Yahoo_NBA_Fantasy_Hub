@@ -7,9 +7,11 @@ Extra column: manager average ranking ('Avg Rank')
 Saves image to `visualization/graphs/week_{week}/Ranking_Table_Week_{week}.png`.
 """
 
-import pandas as pd
-import numpy as np
 from pathlib import Path
+import pandas as pd
+from typing import Any
+import numpy as np
+import dataframe_image as dfi
 import seaborn as sns
 from matplotlib import pyplot as plt
 try:
@@ -121,8 +123,48 @@ def save_ranking_table_image(ranks_df, numeric_cols, output_path="Ranking_Table.
     return str(Path(output_path).absolute())
 
 
+def create_styled_rankings_table(df: pd.DataFrame, week: str, output_dir: Path, file_name: str):
+    """Convert ranking DataFrame to styled image table and save."""
+    ranked_df = df.rank(ascending=False)
+    ranked_df['TO'] = df['TO'].rank(ascending=True)
+
+    exclude_cols = ['FGM', 'FGA', 'FTM', 'FTA']
+    ranked_df['Avg_Rank'] = (
+        ranked_df.drop(columns=exclude_cols)
+        .mean(axis=1)
+    )
+    # ranked_df.drop(columns=['FGM', 'FGA', 'FTM', 'FTA']).sum(axis=1).divide(len(df.index))
+    ranked_df['Manager'] = df['Team']
+    ranked_df = ranked_df.drop(columns=['Team'])
+    cols = ['Manager'] + [c for c in ranked_df.columns if c != 'Manager']
+    ranked_df = ranked_df[cols]
+
+    stats = ['FGM', 'FGA', 'FTM', 'FTA', 'FG%', 'FT%', '3PTM', 'PTS', 'REB', 'AST', 'STL', 'BLK', 'TO', 'Avg_Rank']
+    float_stats = ['Avg_Rank']
+    integer_stats = ['FGM', 'FGA', 'FTM', 'FTA', 'FG%', 'FT%', '3PTM', 'PTS', 'REB', 'AST', 'STL', 'BLK', 'TO']
+
+    title = f'Ranking table - week {week}'
+    # Style with rankings and color gradient
+    df_ranked_and_sorted_by_avg = ranked_df.sort_values(by='Avg_Rank')
+    ranked_styled_df = (
+        df_ranked_and_sorted_by_avg.style
+        .format('{:.0f}', subset=integer_stats)
+        .format('{:.2f}', subset=float_stats)
+        .background_gradient(
+            cmap='RdYlGn_r', 
+            subset=stats
+        )
+        .set_caption(f"<b>{title}</b>")
+        .hide(axis="index")
+    )
+
+    output_path = str(output_dir / file_name)
+    styled: Any = ranked_styled_df
+    dfi.export(styled, output_path)
+
+
 def run_ranking_table_visualization(week: str) -> None:
-    """Run ranking table visualization for given week number."""
+    """Run ranking table visualization for given week - been called from `main.py`"""
     json_file = Path(f"league_data/weekly_scoreboard/parsed_scoreboard_week_{week}.json")
 
     if json_file.exists():
@@ -130,33 +172,43 @@ def run_ranking_table_visualization(week: str) -> None:
         df = load_scoreboard_json(str(json_file))
         print(f"Loaded {len(df)} teams/rows")
 
-        ranks_df, numeric_cols = build_ranking_df(df)
-
         output_dir = Path(f"visualization/graphs/week_{week}")
-        output_path = output_dir / f"Ranking_Table_Week_{week}.png"
+        styled_file_name = f"styled_ranking_week_{week}.png"
 
-        output_abs = save_ranking_table_image(ranks_df, numeric_cols, str(output_path), week=week)
-        print(f"✓ Saved to: {output_abs}")
+        try:
+            create_styled_rankings_table(df, week=week, output_dir=output_dir, file_name=styled_file_name)
+            print(f"✓ Saved to: {str(output_dir / styled_file_name)}")
+        except Exception as e:
+            print(f"Error creating styled rankings table: {e}")
+
+        # file_name = f"Ranking_Table_Week_{week}.png"
+        # output_path = output_dir / file_name
+        # ranks_df, numeric_cols = build_ranking_df(df)
+        # output_abs = save_ranking_table_image(ranks_df, numeric_cols, str(output_path), week=week)
+        # print(f"✓ Saved to: {str(Path(output_dir / file_name).absolute())}")
     else:
         print(f"File not found: {json_file}")
 
 
 if __name__ == "__main__":
-    json_file = Path("league_data/weekly_scoreboard/parsed_scoreboard_week_5.json")
+    week = "5"
+    json_file = Path(f"league_data/weekly_scoreboard/parsed_scoreboard_week_{week}.json")
 
     if json_file.exists():
         print(f"Loading {json_file}...")
         df = load_scoreboard_json(str(json_file))
         print(f"Loaded {len(df)} teams/rows")
 
-        ranks_df, numeric_cols = build_ranking_df(df)
-
-        # Extract week number from filename
-        week = json_file.stem.split("_")[-1]
         output_dir = Path(f"visualization/graphs/week_{week}")
-        output_path = output_dir / f"Ranking_Table_Week_{week}.png"
+        styled_file_name = f"styled_ranking_week_{week}.png"
 
-        output_abs = save_ranking_table_image(ranks_df, numeric_cols, str(output_path), week=week)
-        print(f"✓ Saved to: {output_abs}")
+        create_styled_rankings_table(df, week=week, output_dir=output_dir, file_name=styled_file_name)
+        print(f"✓ Saved to: {str(output_dir / styled_file_name)}")
+
+        # file_name = f"Ranking_Table_Week_{week}.png"
+        # output_path = output_dir / file_name
+        # ranks_df, numeric_cols = build_ranking_df(df)
+        # output_abs = save_ranking_table_image(ranks_df, numeric_cols, str(output_path), week=week)
+        # print(f"✓ Saved to: {str(Path(output_dir / file_name).absolute())}")
     else:
         print(f"File not found: {json_file}")
