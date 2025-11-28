@@ -2,6 +2,7 @@ from pathlib import Path
 import dataframe_image as dfi
 import pandas as pd
 import itertools
+from typing import Any, cast
 
 try:
     from _helpers import  load_scoreboard_json
@@ -15,6 +16,7 @@ def build_head_to_head_df(df: pd.DataFrame, week: str, output_dir: Path, file_na
 
     teams = df['Team'].tolist()
     h2h_matrix = pd.DataFrame(index=teams, columns=teams)
+    totals = {team: {'wins': 0, 'losses': 0, 'ties': 0} for team in teams}
 
     for team1, team2 in itertools.combinations(teams, 2):
         wins, losses, ties = 0, 0, 0
@@ -55,12 +57,52 @@ def build_head_to_head_df(df: pd.DataFrame, week: str, output_dir: Path, file_na
         h2h_matrix.loc[team1, team2] = f"{wins}-{losses}-{ties}"
         h2h_matrix.loc[team2, team1] = f"{losses}-{wins}-{ties}"
 
+        totals[team1]['wins'] += wins
+        totals[team1]['losses'] += losses
+        totals[team1]['ties'] += ties
+        totals[team2]['wins'] += losses
+        totals[team2]['losses'] += wins
+        totals[team2]['ties'] += ties
+
     # Fill diagonal with "-"
     for team in teams:
         h2h_matrix.loc[team, team] = "-"
 
+    h2h_matrix['W-L-T'] = [f"{totals[team]['wins']}-{totals[team]['losses']}-{totals[team]['ties']}" 
+                          for team in teams]
+    
+    h2h_matrix['Win%'] = [
+        (totals[team]['wins'] + 0.5 * totals[team]['ties']) / 
+        (totals[team]['wins'] + totals[team]['losses'] + totals[team]['ties']) * 100
+        for team in teams
+    ]
+
+    title = f"Head-to-Head Matchups - Week {week}"
+    styled_df = h2h_matrix.style.set_properties(subset=None, **{
+        'text-align': 'center',
+        'white-space': 'nowrap',
+        'padding': '5px',
+        'font-family': 'Segoe UI, Arial, sans-serif'
+    }).set_table_styles([
+        {'selector': 'caption', 'props': [
+            ('caption-side', 'top'),
+            ('text-align', 'center'),
+            ('font-size', '20px'),
+            ('font-weight', '700'),
+            ('font-family', '"Segoe UI", Arial, sans-serif'),
+            ('padding', '8px')
+        ]},
+        {'selector': 'th', 'props': [('text-align', 'center')]},
+        {'selector': 'td', 'props': [('text-align', 'center')]}
+    ]).background_gradient(
+        cmap='RdYlGn', 
+        subset=['Win%']
+    ).format({'Win%': '{:.1f}%'}
+    ).set_caption(title)
+    
+
     output_path = str(output_dir / file_name)
-    dfi.export(h2h_matrix, output_path)
+    dfi.export(cast(Any, styled_df), output_path)
 
 
 def run_head_to_head_visualization(week: str) -> None:
