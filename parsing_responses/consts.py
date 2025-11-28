@@ -128,6 +128,7 @@ def safe_get(d, *keys, default=None):
 
     return d
 
+
 def extract_from_list_of_dicts(lst, key):
     """Given a list like [{a:1}, {b:2}, ...], return the value for dict[key]."""
     if not isinstance(lst, list):
@@ -136,6 +137,7 @@ def extract_from_list_of_dicts(lst, key):
         if isinstance(item, dict) and key in item:
             return item[key]
     return None
+
 
 def save_parsed_response_to_file(response: List[Dict[str, Any]], path: str) -> None:
     """Save parsed response to a JSON file"""
@@ -151,6 +153,7 @@ def save_parsed_response_to_file(response: List[Dict[str, Any]], path: str) -> N
     except Exception as e:
         print(f"Failed to save parsed response to {path}: {e}")
 
+
 def save_response_to_file(response: Dict[str, Any], path: str) -> None:
     """Save parsed response to a JSON file"""
     
@@ -165,8 +168,10 @@ def save_response_to_file(response: Dict[str, Any], path: str) -> None:
     except Exception as e:
         print(f"Failed to save parsed response to {path}: {e}")
 
+
 # def extract_stats_from_response(stats_structure: list[Any]) -> List[Dict[str, Any]]:
 #     return []
+
 
 # # `safe_get` helper function for parsing Yahoo's inconsistent response structures
 # # returns the nested value if exists

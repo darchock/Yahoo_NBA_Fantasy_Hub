@@ -28,7 +28,6 @@ except ImportError:
     )
 
 
-
 def build_ranking_df(df):
     """Return DataFrame of ranks per numeric category and an Avg Rank column."""
     numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
@@ -133,7 +132,7 @@ def create_styled_rankings_table(df: pd.DataFrame, week: str, output_dir: Path, 
         ranked_df.drop(columns=exclude_cols)
         .mean(axis=1)
     )
-    # ranked_df.drop(columns=['FGM', 'FGA', 'FTM', 'FTA']).sum(axis=1).divide(len(df.index))
+
     ranked_df['Manager'] = df['Team']
     ranked_df = ranked_df.drop(columns=['Team'])
     cols = ['Manager'] + [c for c in ranked_df.columns if c != 'Manager']

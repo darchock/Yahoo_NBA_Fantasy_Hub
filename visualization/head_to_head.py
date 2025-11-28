@@ -5,7 +5,7 @@ import itertools
 from typing import Any, cast
 
 try:
-    from _helpers import  load_scoreboard_json
+    from _helpers import load_scoreboard_json
 except ImportError:
     # allow running as script from main.py
     from visualization._helpers import load_scoreboard_json
