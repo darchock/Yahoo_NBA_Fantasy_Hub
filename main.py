@@ -14,6 +14,7 @@ from api.get_standings import get_league_standings
 from api.get_scoreboard import get_league_weekly_scoreboard
 from visualization.totals_table import run_totals_table_visualization
 from visualization.ranking_table import run_ranking_table_visualization
+from visualization.head_to_head import run_head_to_head_visualization
 
 def authenticate_if_needed() -> bool:
     """
