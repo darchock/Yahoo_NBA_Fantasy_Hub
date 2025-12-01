@@ -108,9 +108,13 @@ def main() -> None:
     print("Application running...")
     print("=" * 50)
 
-    # TODO: Add await for user input logic 
     print("Ready to make API requests to Yahoo Fantasy API")
-    week_num = "4"
+    week_num = input("Enter the week number to process (e.g., 1, 2, ...): ").strip()
+    if not week_num.isdigit() or int(week_num) < 1:
+        print("Invalid week number. Please enter a positive integer.")
+        sys.exit(1)
+
+    print(f"Working on week: {week_num}")
     get_league_standings(week=week_num)
     get_league_weekly_scoreboard(week=week_num)
 
