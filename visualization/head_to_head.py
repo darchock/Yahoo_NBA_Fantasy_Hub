@@ -118,7 +118,7 @@ def run_head_to_head_visualization(week: str) -> None:
 
         try:
             build_head_to_head_df(df=df, week=week, output_dir=output_dir, file_name=h2h_file_name)
-            print(f"✓ Saved to: {str(output_dir / h2h_file_name)}")
+            print(f"✅ Saved to: {str(output_dir / h2h_file_name)}")
         except Exception as e:
             print(f"Error creating head to head table: {e}")
     else:
@@ -139,7 +139,7 @@ if __name__ == "__main__":
 
         try:
             build_head_to_head_df(df=df, week=week, output_dir=output_dir, file_name=h2h_file_name)
-            print(f"✓ Saved to: {str(output_dir / h2h_file_name)}")
+            print(f"✅ Saved to: {str(output_dir / h2h_file_name)}")
         except Exception as e:
             print(f"Error creating head to head table: {e}")
     else:

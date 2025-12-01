@@ -176,7 +176,7 @@ def run_ranking_table_visualization(week: str) -> None:
 
         try:
             create_styled_rankings_table(df, week=week, output_dir=output_dir, file_name=styled_file_name)
-            print(f"✓ Saved to: {str(output_dir / styled_file_name)}")
+            print(f"✅ Saved to: {str(output_dir / styled_file_name)}")
         except Exception as e:
             print(f"Error creating styled rankings table: {e}")
 
@@ -203,7 +203,7 @@ if __name__ == "__main__":
 
         try:
             create_styled_rankings_table(df, week=week, output_dir=output_dir, file_name=styled_file_name)
-            print(f"✓ Saved to: {str(output_dir / styled_file_name)}")
+            print(f"✅ Saved to: {str(output_dir / styled_file_name)}")
         except Exception as e:
             print(f"Error creating styled rankings table: {e}")
 
