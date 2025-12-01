@@ -127,13 +127,19 @@ def main() -> None:
     path = f"league_data/weekly_standings_and_totals/parsed_standings_week_{week_num}.json"
     save_parsed_response_to_file(parsed_standings_weekly, path)
 
-    # Run visualization generation
+    ## Run visualization generation ##
+    print("\nGenerating visualizations...")
+    os.makedirs(f"visualization/graphs/week_{week_num}", exist_ok=True)
+    print("Created directory:", f"visualization/graphs/week_{week_num}")
 
     # Run Totals Table generation
     run_totals_table_visualization(week=week_num)
 
     # Run Ranking Table generation
     run_ranking_table_visualization(week=week_num)
+
+    # Run Head-to-Head matrix generation
+    run_head_to_head_visualization(week=week_num)
 
 
 if __name__ == "__main__":
