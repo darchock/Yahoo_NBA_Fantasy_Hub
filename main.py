@@ -124,7 +124,7 @@ def main() -> None:
     parsed_standings_weekly = parse_weekly_standings(data=response_standings_weekly, week=week_num)
 
     # Save to file
-    path = f"league_data/weekly_scoreboard/parsed_standings_week_{week_num}.json"
+    path = f"league_data/weekly_standings_and_totals/parsed_standings_week_{week_num}.json"
     save_parsed_response_to_file(parsed_standings_weekly, path)
 
     # Run visualization generation
