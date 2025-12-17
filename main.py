@@ -3,6 +3,7 @@ Main entry point for Yahoo NBA Fantasy Hub application.
 Handles OAuth authentication and token management.
 """
 
+from pathlib import Path
 import sys
 import json
 from yahoo_api_handler import YahooAPIHandler
@@ -15,6 +16,7 @@ from api.get_scoreboard import get_league_weekly_scoreboard
 from visualization.totals_table import run_totals_table_visualization
 from visualization.ranking_table import run_ranking_table_visualization
 from visualization.head_to_head import run_head_to_head_visualization
+from visualization.standings_bump_chart import run_standings_bump_chart
 
 def authenticate_if_needed() -> bool:
     """
@@ -118,33 +120,55 @@ def main() -> None:
     get_league_standings(week=week_num)
     get_league_weekly_scoreboard(week=week_num)
 
-    response_scoreboard_weekly = json.load(open(f"response/scoreboard_week_{week_num}.json", "r", encoding="utf-8")) 
-    parsed_scoreboard_weekly = parse_weekly_scoreboard(data=response_scoreboard_weekly, week=week_num)
+    is_scoreboard_parsing_exists = False
+    weekly_scoreboard_file = Path(f"response/scoreboard_week_{week_num}.json")
+    if not weekly_scoreboard_file.exists():
+        print(f"Scoreboard file not found: {weekly_scoreboard_file}")
+    else:
+        is_scoreboard_parsing_exists = True
+        response_scoreboard_weekly = json.load(open(weekly_scoreboard_file, "r", encoding="utf-8")) 
+        parsed_scoreboard_weekly = parse_weekly_scoreboard(data=response_scoreboard_weekly, week=week_num)
 
-    # Save to file
-    path = f"league_data/weekly_scoreboard/parsed_scoreboard_week_{week_num}.json"
-    save_parsed_response_to_file(parsed_scoreboard_weekly, path)
+        # Save to file
+        path = f"league_data/weekly_scoreboard/parsed_scoreboard_week_{week_num}.json"
+        save_parsed_response_to_file(parsed_scoreboard_weekly, path)
 
-    response_standings_weekly = json.load(open(f"response/standings_{week_num}.json", "r", encoding="utf-8"))
-    parsed_standings_weekly = parse_weekly_standings(data=response_standings_weekly, week=week_num)
+    is_standings_parsing_exists = False
+    weekly_standings_file = Path(f"response/standings_{week_num}.json")
+    if not weekly_standings_file.exists():
+        print(f"Standings file not found {weekly_standings_file}")
+    else:
+        is_standings_parsing_exists = True
+        response_standings_weekly = json.load(open(weekly_standings_file, "r", encoding="utf-8"))
+        parsed_standings_weekly = parse_weekly_standings(data=response_standings_weekly, week=week_num)
 
-    # Save to file
-    path = f"league_data/weekly_standings_and_totals/parsed_standings_week_{week_num}.json"
-    save_parsed_response_to_file(parsed_standings_weekly, path)
+        # Save to file
+        path = f"league_data/weekly_standings_and_totals/parsed_standings_week_{week_num}.json"
+        save_parsed_response_to_file(parsed_standings_weekly, path)
+
+        
+    if not is_standings_parsing_exists and not is_scoreboard_parsing_exists:
+        print("Neither weekly standings nor scoreboard were parsed due to technical errors")
+        sys.exit(1)
 
     ## Run visualization generation ##
     print("\nGenerating visualizations...")
     os.makedirs(f"visualization/graphs/week_{week_num}", exist_ok=True)
     print("Created directory:", f"visualization/graphs/week_{week_num}")
 
-    # Run Totals Table generation
-    run_totals_table_visualization(week=week_num)
+    if is_standings_parsing_exists:
+        # Run Standings Bump Chart generation
+        run_standings_bump_chart(week_end=week_num, week_start="1")
 
-    # Run Ranking Table generation
-    run_ranking_table_visualization(week=week_num)
+    if is_scoreboard_parsing_exists:
+        # Run Totals Table generation
+        run_totals_table_visualization(week=week_num)
 
-    # Run Head-to-Head matrix generation
-    run_head_to_head_visualization(week=week_num)
+        # Run Ranking Table generation
+        run_ranking_table_visualization(week=week_num)
+
+        # Run Head-to-Head matrix generation
+        run_head_to_head_visualization(week=week_num)
 
 
 if __name__ == "__main__":
