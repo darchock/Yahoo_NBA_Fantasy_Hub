@@ -64,8 +64,16 @@ def parse_weekly_standings(data: Dict[str, Any], week: str) -> List[Dict[str, An
                         # Extract win rate
                         team_standings_dict = team_lst[2]
                         team_standings = team_standings_dict["team_standings"]
+
                         win_rate_raw = team_standings["outcome_totals"]["percentage"]
-                        win_rate = float(win_rate_raw) * 100 if win_rate_raw else 0.0
+                        win_rate_value = float(win_rate_raw) * 100 if win_rate_raw else 0.0
+                        win_rate = f"{win_rate_value:.2f}"
+
+                        wins_raw = team_standings["outcome_totals"]["wins"]
+                        wins = int(wins_raw)
+
+                        ties_raw = team_standings["outcome_totals"]["ties"]
+                        ties = int(ties_raw)
                         
                         # 5️⃣ Append to results
                         team_name = MANAGER_ID_TO_NAME_MAP.get(str(team_id))
@@ -73,6 +81,8 @@ def parse_weekly_standings(data: Dict[str, Any], week: str) -> List[Dict[str, An
                             "team_name": team_name,
                             "standing": int(standing)+1,
                             "win_rate": win_rate,
+                            "wins": wins,
+                            "ties": ties,
                             "stats": stats_map
                         })
     except Exception as e:
