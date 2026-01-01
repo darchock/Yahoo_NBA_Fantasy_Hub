@@ -31,6 +31,20 @@ MANAGER_ID_TO_NAME_MAP = {
     "10": "ג'יי ג'יי רדי"
 }
 
+# Manager Name → Manager ID
+MANAGER_NAME_TO_ID_MAP = {
+    "Bucharest Panthers": "1",
+    "The Perfumer": "2",
+    "Nahi's BOYS": "3",
+    "LeBrother In Law": "4",
+    "F.C HATERS": "5",
+    "LevinSons": "6",
+    "Maple Mamba": "7",
+    "Tomitz Tapuzim B.C": "8",
+    "המטביל": "9",
+    "ג'יי ג'יי רדי": "10"
+}
+
 
 def safe_get(d, *keys, default=None):
     """
