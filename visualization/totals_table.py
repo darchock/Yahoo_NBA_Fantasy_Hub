@@ -161,18 +161,19 @@ def create_styled_totals_table(df: pd.DataFrame, week: str, output_dir: Path, fi
     styled: Any = totals_styled_df
     dfi.export(styled, output_path)
 
+
 def run_totals_table_visualization(week: str) -> None:
     """Run totals table visualization for given week - been called from `main.py`"""
     json_file = Path(f"league_data/weekly_scoreboard/parsed_scoreboard_week_{week}.json")
-    
+
     if json_file.exists():
         print(f"Loading {json_file}...")
         df = load_scoreboard_json(str(json_file))
         print(f"Loaded {len(df)} teams/rows")
-        
+
         output_dir = Path(f"visualization/graphs/week_{week}")
         styled_file_name = f"styled_totals_week_{week}.png"
-        
+
         try:
             df = append_league_average_row(df)
             create_styled_totals_table(df=df, week=week, output_dir=output_dir, file_name=styled_file_name)
@@ -188,7 +189,73 @@ def run_totals_table_visualization(week: str) -> None:
         print(f"File not found: {json_file}")
 
 
-if __name__ == "__main__":
+def run_periodical_totals_table_visualization(start_week: int, end_week: int) -> None:
+    """Run totals table visualization for a period spanning multiple weeks.
+
+    Accumulates statistics from start_week to end_week (inclusive) and generates
+    a combined totals table showing aggregated stats across all weeks.
+
+    Args:
+        start_week: First week number to include (inclusive)
+        end_week: Last week number to include (inclusive)
+    """
+    print(f"Generating periodical totals table for weeks {start_week} to {end_week}...")
+
+    # Collect data from all weeks
+    accumulated_dfs = []
+    missing_weeks = []
+
+    for week in range(start_week, end_week + 1):
+        json_file = Path(f"league_data/weekly_scoreboard/parsed_scoreboard_week_{week}.json")
+        if json_file.exists():
+            df = load_scoreboard_json(str(json_file))
+            accumulated_dfs.append(df)
+            print(f"  ✓ Loaded week {week}")
+        else:
+            missing_weeks.append(week)
+            print(f"  ✗ Week {week} data not found")
+
+    if not accumulated_dfs:
+        print(f"❌ No data found for weeks {start_week} to {end_week}")
+        return
+
+    if missing_weeks:
+        print(f"⚠️  Warning: Missing data for weeks: {missing_weeks}")
+
+    # Accumulate stats across all weeks
+    # Group by Team and sum all numeric columns
+    combined_df = pd.concat(accumulated_dfs, ignore_index=True)
+
+    # For percentage stats (FG%, FT%), we need to recalculate from totals
+    # Sum all counting stats, then recalculate percentages
+    accumulated = combined_df.groupby('Team', as_index=False).sum(numeric_only=True)
+
+    # Recalculate percentages from accumulated makes/attempts
+    if 'FGM' in accumulated.columns and 'FGA' in accumulated.columns:
+        accumulated['FG%'] = accumulated['FGM'] / accumulated['FGA']
+    if 'FTM' in accumulated.columns and 'FTA' in accumulated.columns:
+        accumulated['FT%'] = accumulated['FTM'] / accumulated['FTA']
+
+    print(f"✓ Accumulated stats for {len(accumulated)} teams")
+
+    # Create output directory
+    output_dir = Path(f"visualization/graphs/weeks_{start_week}_to_{end_week}")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    styled_file_name = f"styled_totals_weeks_{start_week}_to_{end_week}.png"
+
+    try:
+        accumulated = append_league_average_row(accumulated)
+        # Update the title to reflect the period
+        week_range = f"{start_week}-{end_week}"
+        create_styled_totals_table(df=accumulated, week=week_range, output_dir=output_dir, file_name=styled_file_name)
+        print(f"✅ Saved periodical totals table to: {str(output_dir / styled_file_name)}")
+    except Exception as e:
+        print(f"❌ Error creating styled periodical totals table: {e}")
+
+
+def run_test_weekly_totals_table_visualization() -> None:
+    """Test function to run totals table visualization for a specific week."""
     week = "5"
     json_file = Path(f"league_data/weekly_scoreboard/parsed_scoreboard_week_{week}.json")
     
@@ -198,8 +265,8 @@ if __name__ == "__main__":
         print(f"Loaded {len(df)} teams/rows")
         
         output_dir = Path(f"visualization/graphs/week_{week}")
-        styled_file_name = f"styled_ranking_week_{week}.png"
-        
+        styled_file_name = f"styled_totals_week_{week}.png"
+
         try:
             df = append_league_average_row(df)
             create_styled_totals_table(df=df, week=week, output_dir=output_dir, file_name=styled_file_name)
@@ -213,3 +280,14 @@ if __name__ == "__main__":
         # print(f"✓ Saved to: {str(Path(output_dir / file_name).absolute())}")
     else:
         print(f"File not found: {json_file}")
+
+
+def run_test_periodical_totals_table_visualization() -> None:
+    """Test function to run periodical totals table visualization for specific weeks."""
+    start_week = 5
+    end_week = 10
+    run_periodical_totals_table_visualization(start_week=start_week, end_week=end_week)
+
+
+if __name__ == "__main__":
+    run_test_periodical_totals_table_visualization()
