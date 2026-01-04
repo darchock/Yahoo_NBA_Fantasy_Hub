@@ -30,7 +30,7 @@ def get_team_stats(team_id: str, is_main: bool = False) -> None:
             if is_main:
                 path = f"response/main_team_stats_{team_id}.json"
             else:
-                path = f"response/team__stats_{team_id}.json"
+                path = f"response/team_stats_{team_id}.json"
 
             save_response_to_file(team_info, path)
             print(f"✅ JSON response saved successfully to {path}")
