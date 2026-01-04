@@ -126,7 +126,8 @@ def main() -> None:
         print(f"Scoreboard file not found: {weekly_scoreboard_file}")
     else:
         is_scoreboard_parsing_exists = True
-        response_scoreboard_weekly = json.load(open(weekly_scoreboard_file, "r", encoding="utf-8")) 
+        with open(weekly_scoreboard_file, "r", encoding="utf-8") as f:
+            response_scoreboard_weekly = json.load(f)
         parsed_scoreboard_weekly = parse_weekly_scoreboard(data=response_scoreboard_weekly, week=week_num)
 
         # Save to file
@@ -139,7 +140,8 @@ def main() -> None:
         print(f"Standings file not found {weekly_standings_file}")
     else:
         is_standings_parsing_exists = True
-        response_standings_weekly = json.load(open(weekly_standings_file, "r", encoding="utf-8"))
+        with open(weekly_standings_file, "r", encoding="utf-8") as f:
+            response_standings_weekly = json.load(f)
         parsed_standings_weekly = parse_weekly_standings(data=response_standings_weekly, week=week_num)
 
         # Save to file
