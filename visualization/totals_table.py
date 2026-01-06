@@ -148,13 +148,13 @@ def create_styled_totals_table(df: pd.DataFrame, week: str, output_dir: Path, fi
         df.style
         .format(float_format, subset=float_stats)
         .format(integer_format,subset=integer_stats)
-        .background_gradient(cmap='RdYlGn', subset=pd.IndexSlice[non_avg_rows, regular_stats])
-        .background_gradient(cmap='RdYlGn_r', subset=pd.IndexSlice[non_avg_rows, revert_stats])
+        .background_gradient(cmap='RdYlGn', subset=pd.IndexSlice[non_avg_rows, regular_stats]) # type: ignore
+        .background_gradient(cmap='RdYlGn_r', subset=pd.IndexSlice[non_avg_rows, revert_stats]) # type: ignore
         .apply(highlight_average, axis=1)
         .set_caption(f"<b>{title}</b>")
         .hide(axis="index")
     )
-    
+
     output_path = str(output_dir / file_name)
     styled: Any = totals_styled_df
     dfi.export(styled, output_path)
