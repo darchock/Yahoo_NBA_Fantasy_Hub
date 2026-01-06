@@ -144,19 +144,22 @@ def run_standings_bump_chart(week_end: str, week_start: str = "1") -> None:
 
 
 if __name__ == "__main__":
-    print("Generate Standings Bump Chart")
-    week_start = input("Enter the week number that you'd like to start from (e.g., 1, 2, ...): ").strip()
+    print("=" * 60)
+    print("Standings Bump Chart Visualization")
+    print("=" * 60)
+
+    week_start = input("\nEnter start week number (e.g., 1): ").strip()
     if not week_start.isdigit() or int(week_start) < 1:
-        print("Invalid week number. Please enter a positive integer.")
+        print("❌ Invalid week number. Please enter a positive integer.")
         exit(1)
 
-    week_end = input("Enter the week number that you'd like to end at (e.g., 1, 2, ...): ").strip()
+    week_end = input("Enter end week number (e.g., 10): ").strip()
     if not week_end.isdigit() or int(week_end) < 1:
-        print("Invalid week number. Please enter a positive integer.")
+        print("❌ Invalid week number. Please enter a positive integer.")
         exit(1)
 
-    print(f"Generating bump chart from week {week_start} to week {week_end}...")
-    try:
-        plot_standings_bump_chart(week_end=week_end, week_start=week_start)
-    except Exception as e:
-        print(f"Error generating bump chart from week {week_start} to {week_end}: {e}")
+    if int(week_start) > int(week_end):
+        print("❌ Start week must be less than or equal to end week.")
+        exit(1)
+
+    run_standings_bump_chart(week_end=week_end, week_start=week_start)

@@ -126,21 +126,13 @@ def run_head_to_head_visualization(week: str) -> None:
 
 
 if __name__ == "__main__":
-    week = "5"
-    json_file = Path(f"league_data/weekly_scoreboard/parsed_scoreboard_week_{week}.json")
+    print("=" * 60)
+    print("Head-to-Head Visualization")
+    print("=" * 60)
 
-    if json_file.exists():
-        print(f"Loading {json_file}...")
-        df = load_scoreboard_json(str(json_file))
-        print(f"Loaded {len(df)} teams/rows")
-        
-        output_dir = Path(f"visualization/graphs/week_{week}")
-        h2h_file_name = f"H2H_week_{week}.png"
+    week = input("\nEnter week number: ").strip()
 
-        try:
-            build_head_to_head_df(df=df, week=week, output_dir=output_dir, file_name=h2h_file_name)
-            print(f"✅ Saved to: {str(output_dir / h2h_file_name)}")
-        except Exception as e:
-            print(f"Error creating head to head table: {e}")
+    if not week.isdigit():
+        print("❌ Invalid week number. Please enter a positive integer.")
     else:
-        print(f"File not found: {json_file}")
+        run_head_to_head_visualization(week=week)
