@@ -124,17 +124,24 @@ def save_ranking_table_image(ranks_df, numeric_cols, output_path="Ranking_Table.
 
 def create_styled_rankings_table(df: pd.DataFrame, week: str, output_dir: Path, file_name: str):
     """Convert ranking DataFrame to styled image table and save."""
-    ranked_df = df.rank(ascending=False)
+    # First, separate the Team column before ranking
+    teams = df['Team'].copy()
+
+    # Rank all numeric stats (higher is better, except TO)
+    ranked_df = df.drop(columns=['Team']).rank(ascending=False)
     ranked_df['TO'] = df['TO'].rank(ascending=True)
 
-    exclude_cols = ['FGM', 'FGA', 'FTM', 'FTA']
-    ranked_df['Avg_Rank'] = (
-        ranked_df.drop(columns=exclude_cols)
-        .mean(axis=1)
-    )
+    # Define the 9 scoring categories for average rank calculation
+    # Exclude: FGM, FGA, FTM, FTA (these are informational, not scoring categories)
+    scoring_categories = ['FG%', 'FT%', '3PTM', 'PTS', 'REB', 'AST', 'STL', 'BLK', 'TO']
 
-    ranked_df['Manager'] = df['Team']
-    ranked_df = ranked_df.drop(columns=['Team'])
+    # Calculate average rank across only the 9 scoring categories
+    ranked_df['Avg_Rank'] = ranked_df[scoring_categories].mean(axis=1)
+
+    # Add back the team names
+    ranked_df.insert(0, 'Manager', teams)
+
+    # Reorder columns to have Manager first
     cols = ['Manager'] + [c for c in ranked_df.columns if c != 'Manager']
     ranked_df = ranked_df[cols]
 
