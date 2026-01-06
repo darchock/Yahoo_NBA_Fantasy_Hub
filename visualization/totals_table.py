@@ -131,9 +131,8 @@ def create_styled_totals_table(df: pd.DataFrame, week: str, output_dir: Path, fi
     float_stats = ['FG%', 'FT%']
     integer_stats = ['FGM','FGA', 'FTM','FTA','3PTM', 'PTS', 'REB', 'AST', 'STL', 'BLK', 'TO']
 
-    with_color_indices = [r for r in df.index.tolist() if r != "League Average"]
-    subset_regular_cols = df.loc[with_color_indices, regular_stats].columns.tolist()
-    subset_revert_cols = df.loc[with_color_indices, revert_stats].columns.tolist()
+    # Create subset that excludes the League Average row for gradient coloring
+    non_avg_rows = df[df['Team'] != 'League Average'].index.tolist()
 
     def highlight_average(x):
         return ['background-color: #696969; font-weight: bold' if x.name == 'League Average' else '' for _ in x]
@@ -144,14 +143,13 @@ def create_styled_totals_table(df: pd.DataFrame, week: str, output_dir: Path, fi
     def integer_format(x):
         return f'{x:.0f}'
 
-    # league_avg_subset = (['League Average'], df.columns.tolist())
     title = f'Totals table - week {week}'
     totals_styled_df = (
         df.style
         .format(float_format, subset=float_stats)
         .format(integer_format,subset=integer_stats)
-        .background_gradient(cmap='RdYlGn', subset=subset_regular_cols)
-        .background_gradient(cmap='RdYlGn_r', subset=subset_revert_cols)
+        .background_gradient(cmap='RdYlGn', subset=pd.IndexSlice[non_avg_rows, regular_stats])
+        .background_gradient(cmap='RdYlGn_r', subset=pd.IndexSlice[non_avg_rows, revert_stats])
         .apply(highlight_average, axis=1)
         .set_caption(f"<b>{title}</b>")
         .hide(axis="index")
