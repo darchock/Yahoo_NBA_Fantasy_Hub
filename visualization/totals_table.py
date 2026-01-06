@@ -252,40 +252,31 @@ def run_periodical_totals_table_visualization(end_week: int, start_week: int = 1
         print(f"❌ Error creating styled periodical totals table: {e}")
 
 
-def run_test_weekly_totals_table_visualization() -> None:
-    """Test function to run totals table visualization for a specific week."""
-    week = "5"
-    json_file = Path(f"league_data/weekly_scoreboard/parsed_scoreboard_week_{week}.json")
-    
-    if json_file.exists():
-        print(f"Loading {json_file}...")
-        df = load_scoreboard_json(str(json_file))
-        print(f"Loaded {len(df)} teams/rows")
-        
-        output_dir = Path(f"visualization/graphs/week_{week}")
-        styled_file_name = f"styled_totals_week_{week}.png"
-
-        try:
-            df = append_league_average_row(df)
-            create_styled_totals_table(df=df, week=week, output_dir=output_dir, file_name=styled_file_name)
-            print(f"✅ Saved to: {str(output_dir / styled_file_name)}")
-        except Exception as e:
-            print(f"Error creating styled totals table: {e}")
-
-        # file_name = f"Totals_Table_Week_{week}.png"
-        # output_path = output_dir / file_name
-        # output_abs_path = save_table_as_image(df, str(output_path), week=week)
-        # print(f"✓ Saved to: {str(Path(output_dir / file_name).absolute())}")
-    else:
-        print(f"File not found: {json_file}")
-
-
-def run_test_periodical_totals_table_visualization() -> None:
-    """Test function to run periodical totals table visualization for specific weeks."""
-    start_week = 5
-    end_week = 10
-    run_periodical_totals_table_visualization(start_week=start_week, end_week=end_week)
-
-
 if __name__ == "__main__":
-    run_test_periodical_totals_table_visualization()
+    print("=" * 60)
+    print("Totals Table Visualization")
+    print("=" * 60)
+    print("\nChoose visualization type:")
+    print("1. Weekly totals table")
+    print("2. Periodical totals table (multiple weeks)")
+
+    choice = input("\nEnter your choice (1 or 2): ").strip()
+
+    if choice == "1":
+        week = input("Enter week number: ").strip()
+        if not week.isdigit():
+            print("❌ Invalid week number. Please enter a positive integer.")
+        else:
+            run_totals_table_visualization(week=week)
+    elif choice == "2":
+        start_week = input("Enter start week number: ").strip()
+        end_week = input("Enter end week number: ").strip()
+
+        if not start_week.isdigit() or not end_week.isdigit():
+            print("❌ Invalid week numbers. Please enter positive integers.")
+        elif int(start_week) > int(end_week):
+            print("❌ Start week must be less than or equal to end week.")
+        else:
+            run_periodical_totals_table_visualization(start_week=int(start_week), end_week=int(end_week))
+    else:
+        print("❌ Invalid choice. Please enter 1 or 2.")

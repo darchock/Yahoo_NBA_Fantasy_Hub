@@ -256,40 +256,31 @@ def run_periodical_ranking_table_visualization(end_week: int, start_week: int = 
         print(f"❌ Error creating styled periodical ranking table: {e}")
 
 
-def run_test_weekly_ranking_table_visualization() -> None:
-    """Test function to run ranking table visualization for a specific week."""
-    week = "5"
-    json_file = Path(f"league_data/weekly_scoreboard/parsed_scoreboard_week_{week}.json")
-
-    if json_file.exists():
-        print(f"Loading {json_file}...")
-        df = load_scoreboard_json(str(json_file))
-        print(f"Loaded {len(df)} teams/rows")
-
-        output_dir = Path(f"visualization/graphs/week_{week}")
-        styled_file_name = f"styled_ranking_week_{week}.png"
-
-        try:
-            create_styled_rankings_table(df, week=week, output_dir=output_dir, file_name=styled_file_name)
-            print(f"✅ Saved to: {str(output_dir / styled_file_name)}")
-        except Exception as e:
-            print(f"Error creating styled rankings table: {e}")
-
-        # file_name = f"Ranking_Table_Week_{week}.png"
-        # output_path = output_dir / file_name
-        # ranks_df, numeric_cols = build_ranking_df(df)
-        # output_abs = save_ranking_table_image(ranks_df, numeric_cols, str(output_path), week=week)
-        # print(f"✓ Saved to: {str(Path(output_dir / file_name).absolute())}")
-    else:
-        print(f"File not found: {json_file}")
-
-
-def run_test_periodical_ranking_table_visualization() -> None:
-    """Test function to run periodical ranking table visualization for specific weeks."""
-    start_week = 5
-    end_week = 10
-    run_periodical_ranking_table_visualization(start_week=start_week, end_week=end_week)
-
-
 if __name__ == "__main__":
-    run_test_periodical_ranking_table_visualization()
+    print("=" * 60)
+    print("Ranking Table Visualization")
+    print("=" * 60)
+    print("\nChoose visualization type:")
+    print("1. Weekly ranking table")
+    print("2. Periodical ranking table (multiple weeks)")
+
+    choice = input("\nEnter your choice (1 or 2): ").strip()
+
+    if choice == "1":
+        week = input("Enter week number: ").strip()
+        if not week.isdigit():
+            print("❌ Invalid week number. Please enter a positive integer.")
+        else:
+            run_ranking_table_visualization(week=week)
+    elif choice == "2":
+        start_week = input("Enter start week number: ").strip()
+        end_week = input("Enter end week number: ").strip()
+
+        if not start_week.isdigit() or not end_week.isdigit():
+            print("❌ Invalid week numbers. Please enter positive integers.")
+        elif int(start_week) > int(end_week):
+            print("❌ Start week must be less than or equal to end week.")
+        else:
+            run_periodical_ranking_table_visualization(start_week=int(start_week), end_week=int(end_week))
+    else:
+        print("❌ Invalid choice. Please enter 1 or 2.")
