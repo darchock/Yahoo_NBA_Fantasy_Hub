@@ -187,7 +187,7 @@ def run_totals_table_visualization(week: str) -> None:
         print(f"File not found: {json_file}")
 
 
-def run_periodical_totals_table_visualization(start_week: int, end_week: int) -> None:
+def run_periodical_totals_table_visualization(end_week: int, start_week: int = 1) -> None:
     """Run totals table visualization for a period spanning multiple weeks.
 
     Accumulates statistics from start_week to end_week (inclusive) and generates
