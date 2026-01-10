@@ -8,9 +8,9 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 try:
-    from consts import safe_get, extract_from_list_of_dicts
+    from consts import safe_get, extract_from_list_of_dicts, MANAGER_ID_TO_NAME_MAP
 except ImportError:
-    from parsing_responses.consts import safe_get, extract_from_list_of_dicts
+    from parsing_responses.consts import safe_get, extract_from_list_of_dicts, MANAGER_ID_TO_NAME_MAP
 
 
 def parse_player_from_transaction(player_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -352,41 +352,76 @@ if __name__ == "__main__":
     print("Transaction Parser")
     print("=" * 60)
 
-    # Parse league transactions
-    league_file = Path("response/main_transactions_week_10.json")
-    if league_file.exists():
-        print(f"\nLoading {league_file}...")
-        with open(league_file, "r", encoding="utf-8") as f:
-            data = json.load(f)
+    print("\nChoose parsing:")
+    print("1. League Transactions")
+    print("2. Team Transactions")
+    choice = input("Enter choice (1 or 2): ").strip()
 
-        transactions = parse_league_transactions(data)
-        output_path = save_league_transactions(transactions)
-        print(f"Saved to: {output_path}")
+    if choice not in {"1", "2"}:
+        print("Invalid choice. Exiting.")
+        exit(1)
 
-        # Print summary
-        summary = get_transaction_summary(transactions)
-        print(f"\nSummary:")
-        print(f"  Total transactions: {summary['total_transactions']}")
-        print(f"  By type: {summary['by_type']}")
-        sorted_teams = sorted(summary['by_team'].items(), key=lambda x: -x[1])
-        print(f"  Top 5 teams by activity:")
-        for team, count in sorted_teams[:5]:
-            try:
-                print(f"    {team}: {count}")
-            except UnicodeEncodeError:
-                print(f"    [Team with special chars]: {count}")
-    else:
-        print(f"League transactions file not found: {league_file}")
+    if choice == "1":
+        print("\nParsing League Transactions...")
 
-    # Parse team transactions
-    team_file = Path("response/main_team_transactions_1.json")
-    if team_file.exists():
-        print(f"\nLoading {team_file}...")
-        with open(team_file, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        # Parse league transactions
+        league_file = Path("response/parsed_league_transactions.json")
+        if league_file.exists():
+            print(f"\nLoading {league_file}...")
+            with open(league_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
 
-        team_data = parse_team_transactions(data)
-        output_path = save_team_transactions(team_data)
-        print(f"Saved to: {output_path}")
-    else:
-        print(f"Team transactions file not found: {team_file}")
+            transactions = parse_league_transactions(data)
+            output_path = save_league_transactions(transactions)
+            print(f"Saved to: {output_path}")
+
+            # Print summary
+            summary = get_transaction_summary(transactions)
+            print(f"\nSummary:")
+            print(f"  Total transactions: {summary['total_transactions']}")
+            print(f"  By type: {summary['by_type']}")
+            sorted_teams = sorted(summary['by_team'].items(), key=lambda x: -x[1])
+            print(f"  Top 5 teams by activity:")
+            for team, count in sorted_teams[:5]:
+                try:
+                    print(f"    {team}: {count}")
+                except UnicodeEncodeError:
+                    print(f"    [Team with special chars]: {count}")
+        else:
+            print(f"League transactions file not found: {league_file}")
+    elif choice == "2":
+
+        print("\nParsing Team Transactions...")
+        print("\nChoose team to parse:")
+        print(f"1. {MANAGER_ID_TO_NAME_MAP.get('1', 'Unknown Team')}")
+        print(f"2. {MANAGER_ID_TO_NAME_MAP.get('2', 'Unknown Team')}")
+        print(f"3. {MANAGER_ID_TO_NAME_MAP.get('3', 'Unknown Team')}")
+        print(f"4. {MANAGER_ID_TO_NAME_MAP.get('4', 'Unknown Team')}")
+        print(f"5. {MANAGER_ID_TO_NAME_MAP.get('5', 'Unknown Team')}")
+        print(f"6. {MANAGER_ID_TO_NAME_MAP.get('6', 'Unknown Team')}")
+        print(f"7. {MANAGER_ID_TO_NAME_MAP.get('7', 'Unknown Team')}")
+        print(f"8. {MANAGER_ID_TO_NAME_MAP.get('8', 'Unknown Team')}")
+        print(f"9. {MANAGER_ID_TO_NAME_MAP.get('9', 'Unknown Team')}")
+        print(f"10. {MANAGER_ID_TO_NAME_MAP.get('10', 'Unknown Team')}")
+
+        team_choice = input("Enter choice (1 ... 10): ").strip()
+
+        if team_choice not in {"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"}:
+            print("Invalid choice. Exiting.")
+            exit(1)
+
+        team_name = MANAGER_ID_TO_NAME_MAP.get(team_choice, "Unknown Team")
+        print(f"\nSelected Team: {team_name} (ID: {team_choice})")
+
+        # Parse team transactions
+        team_file = Path(f"response/main_team_transactions_{team_choice}.json")
+        if team_file.exists():
+            print(f"\nLoading {team_file}...")
+            with open(team_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+
+            team_data = parse_team_transactions(data)
+            output_path = save_team_transactions(team_data)
+            print(f"Saved to: {output_path}")
+        else:
+            print(f"Team transactions file not found: {team_file}")
