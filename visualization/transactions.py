@@ -139,7 +139,15 @@ def create_team_activity_chart(
     transactions: List[Dict[str, Any]],
     output_path: str
 ) -> str:
-    """Create horizontal bar chart showing transaction activity per team.
+    """Create stacked horizontal bar chart showing transaction activity per team.
+
+    Counts number of players: Added, Dropped, or Traded per team.
+    - Add transaction: player added → count as "Added"
+    - Drop transaction: player dropped → count as "Dropped"
+    - Add/Drop transaction: add part → "Added", drop part → "Dropped"
+    - Trade transaction: player traded in → count as "Traded"
+
+    Teams are sorted by total player movements.
 
     Args:
         transactions: List of parsed transaction dictionaries
@@ -148,7 +156,11 @@ def create_team_activity_chart(
     Returns:
         Absolute path to saved image
     """
-    team_counts: Counter = Counter()
+    from collections import defaultdict
+
+    # Track player movements per team
+    # Structure: {team: {"added": count, "dropped": count, "traded": count}}
+    team_activity: Dict[str, Dict[str, int]] = defaultdict(lambda: {"added": 0, "dropped": 0, "traded": 0})
 
     for txn in transactions:
         for player in txn.get("players", []):
@@ -157,48 +169,85 @@ def create_team_activity_chart(
             action = player.get("action_type", "")
 
             if action == "add" and dest_team:
-                team_counts[dest_team] += 1
+                team_activity[dest_team]["added"] += 1
             elif action == "drop" and src_team:
-                team_counts[src_team] += 1
+                team_activity[src_team]["dropped"] += 1
             elif action == "trade":
                 if dest_team:
-                    team_counts[dest_team] += 1
+                    team_activity[dest_team]["traded"] += 1
 
-    if not team_counts:
+    if not team_activity:
         print("No team data found")
         return ""
 
-    # Sort by count descending
-    sorted_teams = sorted(team_counts.items(), key=lambda x: x[1], reverse=True)
+    # Calculate totals and sort by total descending
+    team_totals = {team: sum(counts.values()) for team, counts in team_activity.items()}
+    sorted_teams = sorted(team_totals.items(), key=lambda x: x[1], reverse=True)
 
-    # Handle RTL text for Hebrew team names
-    teams = [format_text_with_direction(t[0]) for t in reversed(sorted_teams)]
-    counts = [t[1] for t in reversed(sorted_teams)]
+    # Prepare data (reverse for horizontal bar chart - lowest at bottom)
+    sorted_teams = list(reversed(sorted_teams))
+    teams = [format_text_with_direction(t[0]) for t in sorted_teams]
+    team_keys = [t[0] for t in sorted_teams]  # Original keys for lookup
+
+    # Extract counts for each type
+    added = [team_activity[t]["added"] for t in team_keys]
+    dropped = [team_activity[t]["dropped"] for t in team_keys]
+    traded = [team_activity[t]["traded"] for t in team_keys]
+    totals = [team_totals[t] for t in team_keys]
 
     # Create figure
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig, ax = plt.subplots(figsize=(14, 10))
     fig.patch.set_facecolor("white")
 
-    # Create color gradient based on activity
-    colors = plt.cm._colormaps['Blues']([0.3 + 0.6 * (c / max(counts)) for c in counts])
+    # Colors for each action type
+    color_added = "#2ecc71"    # Green for added
+    color_dropped = "#e74c3c"  # Red for dropped
+    color_traded = "#9b59b6"   # Purple for traded
 
     y_pos = range(len(teams))
-    bars = ax.barh(y_pos, counts, color=colors, edgecolor="white", height=0.7)
+    bar_height = 0.7
+
+    # Create stacked bars
+    bars_added = ax.barh(y_pos, added, height=bar_height, color=color_added, edgecolor="white", label="Added")
+
+    left_dropped = added
+    bars_dropped = ax.barh(y_pos, dropped, height=bar_height, left=left_dropped, color=color_dropped, edgecolor="white", label="Dropped")
+
+    left_traded = [a + d for a, d in zip(added, dropped)]
+    bars_traded = ax.barh(y_pos, traded, height=bar_height, left=left_traded, color=color_traded, edgecolor="white", label="Traded")
+
+    # Add count labels inside each bar segment (only if count > 0 and segment wide enough)
+    min_width_for_label = max(totals) * 0.04  # Minimum width to show label
+
+    for i, (a, d, t) in enumerate(zip(added, dropped, traded)):
+        # Added segment label
+        if a >= min_width_for_label:
+            ax.text(a / 2, i, str(a), va="center", ha="center", fontsize=9, fontweight="bold", color="white")
+
+        # Dropped segment label
+        if d >= min_width_for_label:
+            ax.text(a + d / 2, i, str(d), va="center", ha="center", fontsize=9, fontweight="bold", color="white")
+
+        # Traded segment label
+        if t >= min_width_for_label:
+            ax.text(a + d + t / 2, i, str(t), va="center", ha="center", fontsize=9, fontweight="bold", color="white")
 
     ax.set_yticks(y_pos)
     ax.set_yticklabels(teams, fontsize=11)
-    ax.set_xlabel("Total Transactions", fontsize=12, fontweight="bold")
-    ax.set_title("Team Transaction Activity", fontsize=16, fontweight="bold", pad=15)
-    ax.set_xlim(0, max(counts) * 1.12)
+    ax.set_xlabel("Number of Transactions", fontsize=12, fontweight="bold")
+    ax.set_title("Team Transaction Activity by Type", fontsize=16, fontweight="bold", pad=15)
+    ax.set_xlim(0, max(totals) * 1.12)
 
-    # Add count labels
-    for bar, count in zip(bars, counts):
-        ax.text(bar.get_width() + 0.5, bar.get_y() + bar.get_height()/2,
-                str(count), va="center", fontsize=11, fontweight="bold")
+    # Add total count labels at the end of each bar
+    for i, total in enumerate(totals):
+        ax.text(total + 0.5, i, str(total), va="center", fontsize=11, fontweight="bold")
 
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.grid(axis="x", alpha=0.3, linestyle="--")
+
+    # Add legend with title
+    ax.legend(loc="lower right", fontsize=10, title="Number of players that were...", title_fontsize=10)
 
     plt.tight_layout()
 
