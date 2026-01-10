@@ -163,6 +163,7 @@ league_data/transactions/*.json
 
 # Ignore generated visualization files
 visualization/graphs/*/*.png
+visualization/graphs/*/*/*.png
 
 # Spyder project settings
 .spyderproject
