@@ -6,6 +6,7 @@ Visualizations for league transaction data:
 - Transaction timeline
 """
 
+from datetime import datetime
 from pathlib import Path
 from collections import Counter
 from typing import Any, Dict, List
@@ -180,7 +181,7 @@ def create_team_activity_chart(
     fig.patch.set_facecolor("white")
 
     # Create color gradient based on activity
-    colors = plt.cm.get_cmap('Blues')([0.3 + 0.6 * (c / max(counts)) for c in counts])
+    colors = plt.cm._colormaps['Blues']([0.3 + 0.6 * (c / max(counts)) for c in counts])
 
     y_pos = range(len(teams))
     bars = ax.barh(y_pos, counts, color=colors, edgecolor="white", height=0.7)
@@ -210,7 +211,7 @@ def create_team_activity_chart(
     return str(Path(output_path).absolute())
 
 
-def run_most_added_dropped_visualization() -> None:
+def run_most_added_dropped_visualization(folder_name: str) -> None:
     """Run the most added/dropped players visualization."""
     json_file = Path("league_data/transactions/parsed_league_transactions.json")
 
@@ -223,7 +224,7 @@ def run_most_added_dropped_visualization() -> None:
     transactions = load_parsed_transactions(str(json_file))
     print(f"Loaded {len(transactions)} transactions")
 
-    output_dir = Path("visualization/graphs/transactions")
+    output_dir = Path(f"visualization/graphs/transactions/{folder_name}")
     output_dir.mkdir(parents=True, exist_ok=True)
 
     output_path = output_dir / "most_added_dropped_players.png"
@@ -394,7 +395,7 @@ def create_waiver_tenure_chart(
     return str(Path(output_path).absolute())
 
 
-def run_waiver_tenure_visualization() -> None:
+def run_waiver_tenure_visualization(folder_name: str) -> None:
     """Run the waiver wire tenure visualization."""
     json_file = Path("league_data/transactions/parsed_league_transactions.json")
 
@@ -407,7 +408,7 @@ def run_waiver_tenure_visualization() -> None:
     transactions = load_parsed_transactions(str(json_file))
     print(f"Loaded {len(transactions)} transactions")
 
-    output_dir = Path("visualization/graphs/transactions")
+    output_dir = Path(f"visualization/graphs/transactions/{folder_name}")
     output_dir.mkdir(parents=True, exist_ok=True)
 
     output_path = output_dir / "waiver_tenure.png"
@@ -419,7 +420,7 @@ def run_waiver_tenure_visualization() -> None:
         print(f"Error creating visualization: {e}")
 
 
-def run_team_activity_visualization() -> None:
+def run_team_activity_visualization(folder_name: str) -> None:
     """Run the team transaction activity visualization."""
     json_file = Path("league_data/transactions/parsed_league_transactions.json")
 
@@ -432,7 +433,7 @@ def run_team_activity_visualization() -> None:
     transactions = load_parsed_transactions(str(json_file))
     print(f"Loaded {len(transactions)} transactions")
 
-    output_dir = Path("visualization/graphs/transactions")
+    output_dir = Path(f"visualization/graphs/transactions/{folder_name}")
     output_dir.mkdir(parents=True, exist_ok=True)
 
     output_path = output_dir / "team_transaction_activity.png"
@@ -456,17 +457,18 @@ if __name__ == "__main__":
 
     choice = input("\nEnter choice (1-4): ").strip()
 
+    folder_name = datetime.now().strftime("%Y-%m-%d")
     if choice == "1":
-        run_most_added_dropped_visualization()
+        run_most_added_dropped_visualization(folder_name)
     elif choice == "2":
-        run_team_activity_visualization()
+        run_team_activity_visualization(folder_name)
     elif choice == "3":
-        run_waiver_tenure_visualization()
+        run_waiver_tenure_visualization(folder_name)
     elif choice == "4":
-        run_most_added_dropped_visualization()
+        run_most_added_dropped_visualization(folder_name)
         print()
-        run_team_activity_visualization()
+        run_team_activity_visualization(folder_name)
         print()
-        run_waiver_tenure_visualization()
+        run_waiver_tenure_visualization(folder_name)
     else:
         print("Invalid choice")
