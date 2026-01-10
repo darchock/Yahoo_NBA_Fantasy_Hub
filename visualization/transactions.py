@@ -122,8 +122,7 @@ def create_most_added_dropped_chart(
         ax2.grid(axis="x", alpha=0.3, linestyle="--")
 
     # Overall title
-    total_txns = len(transactions)
-    fig.suptitle(f"Player Movement Summary ({total_txns} Total Transactions)",
+    fig.suptitle(f"The most used & dumped players - ({len(counts['adds'])}) Total Adds, ({len(counts['drops'])}) Total Drops",
                  fontsize=16, fontweight="bold", y=0.98)
 
     plt.tight_layout(rect=(0, 0, 1, 0.95))
