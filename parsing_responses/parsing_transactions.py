@@ -36,6 +36,10 @@ def parse_player_from_transaction(player_data: Dict[str, Any]) -> Dict[str, Any]
     # transaction_data can be a dict or a list with one dict
     if isinstance(transaction_data, list) and len(transaction_data) > 0:
         transaction_data = transaction_data[0]
+    
+    # Ensure transaction_data is a dict before calling .get()
+    if not isinstance(transaction_data, dict):
+        transaction_data = {}
 
     return {
         "player_id": player_id,

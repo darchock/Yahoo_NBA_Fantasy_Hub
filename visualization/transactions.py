@@ -125,7 +125,7 @@ def create_most_added_dropped_chart(
     fig.suptitle(f"Player Movement Summary ({total_txns} Total Transactions)",
                  fontsize=16, fontweight="bold", y=0.98)
 
-    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.tight_layout(rect=(0, 0, 1, 0.95))
 
     # Save
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
@@ -180,7 +180,7 @@ def create_team_activity_chart(
     fig.patch.set_facecolor("white")
 
     # Create color gradient based on activity
-    colors = plt.cm.Blues([0.3 + 0.6 * (c / max(counts)) for c in counts])
+    colors = plt.cm.get_cmap('Blues')([0.3 + 0.6 * (c / max(counts)) for c in counts])
 
     y_pos = range(len(teams))
     bars = ax.barh(y_pos, counts, color=colors, edgecolor="white", height=0.7)
