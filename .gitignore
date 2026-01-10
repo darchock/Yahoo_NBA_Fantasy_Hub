@@ -159,6 +159,7 @@ response/*.json
 # Ignore parsed data output files
 league_data/weekly_scoreboard/*.json
 league_data/weekly_standings_and_totals/*.json
+league_data/transactions/*.json
 
 # Ignore generated visualization files
 visualization/graphs/*/*.png
