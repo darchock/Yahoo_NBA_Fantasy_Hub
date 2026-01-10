@@ -395,6 +395,115 @@ def create_waiver_tenure_chart(
     return str(Path(output_path).absolute())
 
 
+def create_pickup_tenure_chart(
+    transactions: List[Dict[str, Any]],
+    output_path: str,
+    top_n: int = 15
+) -> str:
+    """Create bar chart showing longest tenure for pickups (excluding trades).
+
+    Shows only players picked up from waivers or free agents who are still rostered.
+
+    Args:
+        transactions: List of parsed transaction dictionaries
+        output_path: Path to save the output image
+        top_n: Number of top players to show
+
+    Returns:
+        Absolute path to saved image
+    """
+    tenures = get_waiver_tenure_data(transactions)
+
+    if not tenures:
+        print("No tenure data found")
+        return ""
+
+    # Filter out trades - only keep waivers and freeagents
+    pickup_tenures = [t for t in tenures if t.get("source_type") in ("waivers", "freeagents")]
+
+    if not pickup_tenures:
+        print("No pickup tenure data found (excluding trades)")
+        return ""
+
+    # Sort by tenure (longest first) and take top N
+    sorted_tenures = sorted(pickup_tenures, key=lambda x: x["tenure_days"], reverse=True)[:top_n]
+
+    # Prepare data (reverse for horizontal bar chart)
+    sorted_tenures = list(reversed(sorted_tenures))
+
+    labels = [f"{t['player_name']} ({format_text_with_direction(t['team'])})" for t in sorted_tenures]
+    days = [t["tenure_days"] for t in sorted_tenures]
+    sources = [t.get("source_type", "") for t in sorted_tenures]
+
+    # Create figure
+    fig, ax = plt.subplots(figsize=(14, 10))
+    fig.patch.set_facecolor("white")
+
+    # Color by source type (waivers = red, freeagents = blue)
+    color_map = {"waivers": "#e74c3c", "freeagents": "#3498db"}
+    colors = [color_map.get(s, "#95a5a6") for s in sources]
+
+    y_pos = range(len(labels))
+    bars = ax.barh(y_pos, days, color=colors, edgecolor="white", height=0.7)
+
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(labels, fontsize=10)
+    ax.set_xlabel("Days on Roster (Still Rostered)", fontsize=12, fontweight="bold")
+    ax.set_title("Longest Pickup Tenure (Waivers & Free Agents Only)", fontsize=16, fontweight="bold", pad=15)
+    ax.set_xlim(0, max(days) * 1.12)
+
+    # Add day count labels
+    for bar, d in zip(bars, days):
+        ax.text(bar.get_width() + 0.5, bar.get_y() + bar.get_height()/2,
+                f"{d:.0f}", va="center", fontsize=10, fontweight="bold")
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.grid(axis="x", alpha=0.3, linestyle="--")
+
+    # Add legend for source types
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor="#e74c3c", label="From Waivers"),
+        Patch(facecolor="#3498db", label="From Free Agents")
+    ]
+    ax.legend(handles=legend_elements, loc="lower right", fontsize=10)
+
+    plt.tight_layout()
+
+    # Save
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(output_path, dpi=150, bbox_inches="tight", facecolor="white")
+    plt.close()
+
+    return str(Path(output_path).absolute())
+
+
+def run_pickup_tenure_visualization(folder_name: str) -> None:
+    """Run the pickup tenure visualization (waivers + free agents only)."""
+    json_file = Path("league_data/transactions/parsed_league_transactions.json")
+
+    if not json_file.exists():
+        print(f"File not found: {json_file}")
+        print("Please run parsing_transactions.py first to generate parsed data.")
+        return
+
+    print(f"Loading {json_file}...")
+    transactions = load_parsed_transactions(str(json_file))
+    print(f"Loaded {len(transactions)} transactions")
+
+    output_dir = Path(f"visualization/graphs/transactions/{folder_name}")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    output_path = output_dir / "pickup_tenure.png"
+
+    try:
+        result_path = create_pickup_tenure_chart(transactions, str(output_path))
+        print(f"Saved to: {result_path}")
+    except Exception as e:
+        print(f"Error creating visualization: {e}")
+
+
 def run_waiver_tenure_visualization(folder_name: str) -> None:
     """Run the waiver wire tenure visualization."""
     json_file = Path("league_data/transactions/parsed_league_transactions.json")
@@ -452,10 +561,11 @@ if __name__ == "__main__":
     print("\nChoose visualization:")
     print("1. Most Added/Dropped Players")
     print("2. Team Transaction Activity")
-    print("3. Waiver Wire Tenure (longest keepers)")
-    print("4. All")
+    print("3. Waiver Wire Tenure (all sources incl. trades)")
+    print("4. Pickup Tenure (waivers & free agents only)")
+    print("5. All")
 
-    choice = input("\nEnter choice (1-4): ").strip()
+    choice = input("\nEnter choice (1-5): ").strip()
 
     folder_name = datetime.now().strftime("%Y-%m-%d")
     if choice == "1":
@@ -465,10 +575,14 @@ if __name__ == "__main__":
     elif choice == "3":
         run_waiver_tenure_visualization(folder_name)
     elif choice == "4":
+        run_pickup_tenure_visualization(folder_name)
+    elif choice == "5":
         run_most_added_dropped_visualization(folder_name)
         print()
         run_team_activity_visualization(folder_name)
         print()
         run_waiver_tenure_visualization(folder_name)
+        print()
+        run_pickup_tenure_visualization(folder_name)
     else:
         print("Invalid choice")
