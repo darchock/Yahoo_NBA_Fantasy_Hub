@@ -1,6 +1,11 @@
 """
 Main entry point for Yahoo NBA Fantasy Hub application.
 Handles OAuth authentication and token management.
+
+Weekly workflow (run on Monday - first day of matchup):
+1. Fetch standings, scoreboard, and transactions from Yahoo API
+2. Parse all response data
+3. Generate visualizations for WhatsApp group sharing
 """
 
 from pathlib import Path
@@ -10,13 +15,21 @@ from yahoo_api_handler import YahooAPIHandler
 from config import LEAGUE_KEY
 from parsing_responses.parsing_weekly_scoreboard import parse_weekly_scoreboard
 from parsing_responses.parsing_weekly_standings import parse_weekly_standings
+from parsing_responses.parsing_transactions import parse_league_transactions, save_league_transactions
 from parsing_responses.consts import *
 from api.get_standings import get_league_standings
 from api.get_scoreboard import get_league_weekly_scoreboard
-from visualization.totals_table import run_totals_table_visualization
-from visualization.ranking_table import run_ranking_table_visualization
+from api.get_transactions import get_league_transactions
+from visualization.totals_table import run_totals_table_visualization, run_periodical_totals_table_visualization
+from visualization.ranking_table import run_ranking_table_visualization, run_periodical_ranking_table_visualization
 from visualization.head_to_head import run_head_to_head_visualization
 from visualization.standings_bump_chart import run_standings_bump_chart
+from visualization.transactions import (
+    run_most_added_dropped_visualization,
+    run_team_activity_visualization,
+    run_pickup_tenure_visualization
+)
+
 
 def authenticate_if_needed() -> bool:
     """
@@ -116,14 +129,21 @@ def main() -> None:
         print("Invalid week number. Please enter a positive integer.")
         sys.exit(1)
 
-    print(f"Working on week: {week_num}")
+    print(f"\nWorking on week: {week_num}")
+    print("-" * 40)
+
+    # === FETCH DATA FROM API ===
+    print("\n[1/3] Fetching data from Yahoo API...")
     get_league_standings(week=week_num)
     get_league_weekly_scoreboard(week=week_num)
+    get_league_transactions(week=week_num, is_main=True)
 
+    # === PARSE SCOREBOARD ===
+    print("\n[2/3] Parsing response data...")
     is_scoreboard_parsing_exists = False
     weekly_scoreboard_file = Path(f"response/scoreboard_week_{week_num}.json")
     if not weekly_scoreboard_file.exists():
-        print(f"Scoreboard file not found: {weekly_scoreboard_file}")
+        print(f"  ✗ Scoreboard file not found: {weekly_scoreboard_file}")
     else:
         is_scoreboard_parsing_exists = True
         with open(weekly_scoreboard_file, "r", encoding="utf-8") as f:
@@ -133,11 +153,13 @@ def main() -> None:
         # Save to file
         path = f"league_data/weekly_scoreboard/parsed_scoreboard_week_{week_num}.json"
         save_parsed_response_to_file(parsed_scoreboard_weekly, path)
+        print("  ✓ Scoreboard parsed and saved")
 
+    # === PARSE STANDINGS ===
     is_standings_parsing_exists = False
     weekly_standings_file = Path(f"response/standings_{week_num}.json")
     if not weekly_standings_file.exists():
-        print(f"Standings file not found {weekly_standings_file}")
+        print(f"  ✗ Standings file not found: {weekly_standings_file}")
     else:
         is_standings_parsing_exists = True
         with open(weekly_standings_file, "r", encoding="utf-8") as f:
@@ -147,30 +169,67 @@ def main() -> None:
         # Save to file
         path = f"league_data/weekly_standings_and_totals/parsed_standings_week_{week_num}.json"
         save_parsed_response_to_file(parsed_standings_weekly, path)
+        print("  ✓ Standings parsed and saved")
 
-        
+    # === PARSE TRANSACTIONS ===
+    is_transactions_parsing_exists = False
+    transactions_file = Path(f"response/main_transactions_week_{week_num}.json")
+    if not transactions_file.exists():
+        print(f"  ✗ Transactions file not found: {transactions_file}")
+    else:
+        is_transactions_parsing_exists = True
+        with open(transactions_file, "r", encoding="utf-8") as f:
+            response_transactions = json.load(f)
+        parsed_transactions = parse_league_transactions(data=response_transactions)
+        save_league_transactions(parsed_transactions)
+        print("  ✓ Transactions parsed and merged")
+
     if not is_standings_parsing_exists and not is_scoreboard_parsing_exists:
-        print("Neither weekly standings nor scoreboard were parsed due to technical errors")
+        print("\n✗ Neither weekly standings nor scoreboard were parsed due to technical errors")
         sys.exit(1)
 
-    ## Run visualization generation ##
-    print("\nGenerating visualizations...")
+    # === GENERATE VISUALIZATIONS ===
+    print("\n[3/3] Generating visualizations...")
     os.makedirs(f"visualization/graphs/week_{week_num}", exist_ok=True)
-    print("Created directory:", f"visualization/graphs/week_{week_num}")
 
     if is_standings_parsing_exists:
         # Run Standings Bump Chart generation
+        print("\n  → Standings Bump Chart")
         run_standings_bump_chart(week_end=week_num, week_start="1")
 
     if is_scoreboard_parsing_exists:
         # Run Totals Table generation
+        print("\n  → Totals Table (Weekly)")
         run_totals_table_visualization(week=week_num)
 
         # Run Ranking Table generation
+        print("\n  → Ranking Table (Weekly)")
         run_ranking_table_visualization(week=week_num)
 
         # Run Head-to-Head matrix generation
+        print("\n  → Head-to-Head Matrix")
         run_head_to_head_visualization(week=week_num)
+
+        # Run Periodical Totals Table generation (Weeks 1 to current week)
+        print(f"\n  → Totals Table (Periodical: Weeks 1-{week_num})")
+        run_periodical_totals_table_visualization(end_week=int(week_num))
+
+        # Run Periodical Ranking Table generation (Weeks 1 to current week)
+        print(f"\n  → Ranking Table (Periodical: Weeks 1-{week_num})")
+        run_periodical_ranking_table_visualization(end_week=int(week_num))
+
+    if is_transactions_parsing_exists:
+        # Run Transaction visualizations
+        print("\n  → Transaction Visualizations")
+        folder_name = f"week_{week_num}"
+        run_most_added_dropped_visualization(folder_name)
+        run_team_activity_visualization(folder_name)
+        run_pickup_tenure_visualization(folder_name)
+
+    print("\n" + "=" * 50)
+    print("✓ All visualizations generated successfully!")
+    print(f"  Output folder: visualization/graphs/week_{week_num}/")
+    print("=" * 50)
 
 
 if __name__ == "__main__":
