@@ -381,8 +381,13 @@ if __name__ == "__main__":
     if choice == "1":
         print("\nParsing League Transactions...")
 
+        week = input("Enter week number (e.g., 10, 11, 12, ...): ").strip()
+        if not week.isdigit() or int(week) < 1:
+            print("Invalid week number. Exiting.")
+            exit(1)
+
         # Parse league transactions
-        league_file = Path("response/parsed_league_transactions.json")
+        league_file = Path(f"response/main_transactions_week_{week}.json")
         if league_file.exists():
             print(f"\nLoading {league_file}...")
             with open(league_file, "r", encoding="utf-8") as f:
