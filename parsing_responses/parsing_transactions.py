@@ -249,8 +249,9 @@ def get_transaction_summary(transactions: List[Dict[str, Any]]) -> Dict[str, Any
 def save_league_transactions(new_transactions: List[Dict[str, Any]]) -> Path:
     """Save parsed league transactions, merging with existing data.
 
-    Loads existing transactions if file exists, merges with new transactions
-    (deduplicating by transaction_id), and saves the combined result.
+    Creates a dated backup of existing file before merging. Loads existing
+    transactions, merges with new transactions (deduplicating by transaction_id),
+    and saves the combined result.
 
     Args:
         new_transactions: List of newly parsed transaction dictionaries
@@ -259,15 +260,22 @@ def save_league_transactions(new_transactions: List[Dict[str, Any]]) -> Path:
         Path to saved file
     """
     import json
+    import shutil
     from pathlib import Path
 
     output_dir = Path("league_data/transactions")
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "parsed_league_transactions.json"
 
-    # Load existing transactions if file exists
+    # Load existing transactions and create backup if file exists
     existing_transactions = []
     if output_path.exists():
+        # Create dated backup before modifying
+        today = datetime.now().strftime("%Y-%m-%d")
+        backup_path = output_dir / f"parsed_league_transactions_{today}.json"
+        shutil.copy(output_path, backup_path)
+        print(f"Created backup: {backup_path}")
+
         with open(output_path, "r", encoding="utf-8") as f:
             existing_transactions = json.load(f)
 
@@ -294,6 +302,8 @@ def save_league_transactions(new_transactions: List[Dict[str, Any]]) -> Path:
 def save_team_transactions(new_team_data: Dict[str, Any]) -> Path:
     """Save parsed team transactions, merging with existing data.
 
+    Creates a dated backup of existing file before merging.
+
     Args:
         new_team_data: Parsed team transaction data with 'team_id' and 'transactions'
 
@@ -301,6 +311,7 @@ def save_team_transactions(new_team_data: Dict[str, Any]) -> Path:
         Path to saved file
     """
     import json
+    import shutil
     from pathlib import Path
 
     output_dir = Path("league_data/transactions")
@@ -309,9 +320,15 @@ def save_team_transactions(new_team_data: Dict[str, Any]) -> Path:
     team_id = new_team_data.get("team_id", "unknown")
     output_path = output_dir / f"parsed_transactions_team_{team_id}.json"
 
-    # Load existing data if file exists
+    # Load existing data and create backup if file exists
     existing_data = {"team_id": team_id, "team_name": "", "transactions": []}
     if output_path.exists():
+        # Create dated backup before modifying
+        today = datetime.now().strftime("%Y-%m-%d")
+        backup_path = output_dir / f"parsed_transactions_team_{team_id}_{today}.json"
+        shutil.copy(output_path, backup_path)
+        print(f"Created backup: {backup_path}")
+
         with open(output_path, "r", encoding="utf-8") as f:
             existing_data = json.load(f)
 
@@ -413,8 +430,13 @@ if __name__ == "__main__":
         team_name = MANAGER_ID_TO_NAME_MAP.get(team_choice, "Unknown Team")
         print(f"\nSelected Team: {team_name} (ID: {team_choice})")
 
+        week = input("Enter week number (e.g., 1, 2, ...): ").strip()
+        if not week.isdigit() or int(week) < 1:
+            print("Invalid week number. Exiting.")
+            exit(1)
+
         # Parse team transactions
-        team_file = Path(f"response/main_team_transactions_{team_choice}.json")
+        team_file = Path(f"response/main_transactions_team_{team_choice}_week_{week}.json")
         if team_file.exists():
             print(f"\nLoading {team_file}...")
             with open(team_file, "r", encoding="utf-8") as f:
