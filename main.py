@@ -210,13 +210,13 @@ def main() -> None:
         print("\n  → Head-to-Head Matrix")
         run_head_to_head_visualization(week=week_num)
 
-        # Run Periodical Totals Table generation (Weeks 1 to current week)
-        print(f"\n  → Totals Table (Periodical: Weeks 1-{week_num})")
-        run_periodical_totals_table_visualization(end_week=int(week_num))
+        # Run Periodical Totals Table generation (Weeks current week - 3 to current week)
+        print(f"\n  → Totals Table (Periodical: Weeks {int(week_num)-3}-{week_num})")
+        run_periodical_totals_table_visualization(end_week=int(week_num), start_week=int(week_num)-3)
 
-        # Run Periodical Ranking Table generation (Weeks 1 to current week)
-        print(f"\n  → Ranking Table (Periodical: Weeks 1-{week_num})")
-        run_periodical_ranking_table_visualization(end_week=int(week_num))
+        # Run Periodical Ranking Table generation (Weeks current week - 3 to current week)
+        print(f"\n  → Ranking Table (Periodical: Weeks {int(week_num)-3}-{week_num})")
+        run_periodical_ranking_table_visualization(end_week=int(week_num), start_week=int(week_num)-3)
 
     if is_transactions_parsing_exists:
         # Run Transaction visualizations
